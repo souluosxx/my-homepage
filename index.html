@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜空间</title>
+    <link rel="icon" href="tp.jpg" type="image/jpg">
+    <style>
+        /* ==================================================
+           1. 全局变量与赛博基础样式
+        ================================================== */
+        :root {
+            --color-primary: #00f2fe;
+            --color-secondary: #4facfe;
+            --color-bg: #000; /* 纯黑背景最适合星空跳跃 */
+            --color-card-bg: rgba(10, 10, 15, 0.4); 
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background-color: var(--color-bg);
+            color: #fff;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            margin: 0;
+        }
+
+        /* ==================================================
+           2. 玻璃拟态卡片 (主容器)
+        ================================================== */
+        .card {
+            background-color: var(--color-card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px; padding: 40px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            transition: var(--transition);
+            max-width: 450px; width: 90%;
+            position: relative; overflow: hidden;
+            z-index: 10;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
+        }
+
+        .card::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+            background-size: 200% 100%; animation: gradientScan 3s linear infinite;
+        }
+        @keyframes gradientScan { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .avatar {
+            width: 90px; height: 90px; border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            margin: 0 auto 15px; display: block;
+            object-fit: cover; transition: var(--transition);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .card:hover .avatar { transform: rotate(5deg) scale(1.05); border-color: var(--color-primary); box-shadow: 0 0 25px var(--color-primary);}
+
+        .name {
+            font-size: 24px; font-weight: 700; margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        /* ==================================================
+           3. 按钮布局 (两列)
+        ================================================== */
+        .link-group { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+
+        .link-btn {
+            display: block; padding: 12px;
+            color: #fff; text-decoration: none; font-size: 14px;
+            border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .link-btn:hover {
+            background-color: var(--color-primary);
+            color: #000; font-weight: 600;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+            border-color: transparent;
+        }
+
+        /* ==================================================
+           4. 音乐播放器 (增加可点击进度条)
+        ================================================== */
+        #music-player {
+            position: fixed; bottom: 20px; right: 20px; width: 320px;
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 15px;
+            padding: 15px; z-index: 100;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        }
+        #music-player.expanded {
+            width: 380px; height: 480px;
+            border-color: rgba(0, 242, 254, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.2);
+        }
+
+        .song-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px;}
+        .song-name-text { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        
+        .ctrl-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; margin-left: 8px; transition: 0.2s; outline: none;}
+        .ctrl-btn:hover { color: var(--color-primary); text-shadow: 0 0 10px var(--color-primary); transform: scale(1.1);}
+
+        /* ✨ 新增：可点击的进度条样式 */
+        .progress-container {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1); 
+            border-radius: 3px; cursor: pointer; position: relative; margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 100%; background: var(--color-primary); border-radius: 3px; width: 0%;
+            box-shadow: 0 0 10px var(--color-primary); pointer-events: none;
+        }
+        .time-info { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;}
+
+        /* 歌词区 */
+        #lrc-container {
+            height: 50px; overflow-y: auto; text-align: center; position: relative; scroll-behavior: smooth;
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            transition: height 0.4s ease;
+        }
+        #music-player.expanded #lrc-container { flex: 1; height: auto; }
+        #lrc-container::-webkit-scrollbar { display: none; }
+        #lrc-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .lrc-spacer { height: 180px; } 
+        .lrc-line { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 28px; transition: all 0.3s; padding: 0 10px;}
+        .lrc-line.active { color: #fff; font-size: 15px; font-weight: bold; text-shadow: 0 0 10px var(--color-primary); transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="tp.jpg" alt="头像" class="avatar">
+        <h1 class="name">颜空间</h1>
+        <h3 style="margin-bottom: 15px; font-size: 14px; color: var(--color-primary); letter-spacing: 2px;">✨ 点击跳转 ✨</h3>
+        <div class="link-group">
+            <a href="know.html" target="_blank" class="link-btn">🌌 知识库</a>
+           
+        </div>
+    </div>
+
+    <div id="music-player">
+        <audio id="main-audio"></audio>
+        <div class="song-info">
+            <span id="song-name" class="song-name-text" style="color:var(--color-primary)">正在加载...</span>
+            <div style="display: flex; align-items: center;">
+                <button class="ctrl-btn" onclick="toggleExpand()" id="expand-icon" title="展开/收起歌词">🔼</button>
+                <button class="ctrl-btn" onclick="togglePlay()" id="play-icon" title="播放/暂停">▶️</button>
+                <button class="ctrl-btn" onclick="nextSong()" title="下一首">⏭️</button>
+            </div>
+        </div>
+        <div class="progress-container" id="progress-container" onclick="seekAudio(event)">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="time-info">
+            <span id="time-current">00:00</span>
+            <span id="time-total">00:00</span>
+        </div>
+        <div id="lrc-container">
+            <div id="lrc-list"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        // 使用更深的雾效，让远处的星星淡出，增加景深
+        scene.fog = new THREE.FogExp2(0x000000, 0.001); 
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 400; // 相机放在隧道后方
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position = 'fixed';
+        renderer.domElement.style.top = '0';
+        renderer.domElement.style.zIndex = '-1';
+        document.body.appendChild(renderer.domElement);
+
+        // 创建发光粒子纹理
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32; canvas.height = 32;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // 建立星空隧道
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 8000;
+        const starPos = new Float32Array(starCount * 3);
+        const starVelocity = []; // 存储每颗星星的移动速度
+
+        for(let i=0; i<starCount; i++) {
+            // 将星星随机分布在一个巨大的圆柱形空间内
+            starPos[i*3] = (Math.random() - 0.5) * 2000;     // X
+            starPos[i*3+1] = (Math.random() - 0.5) * 2000;   // Y
+            starPos[i*3+2] = (Math.random() - 0.5) * 2000;   // Z
+            starVelocity.push(Math.random() * 2 + 1);       // 随机速度 Z方向
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        
+        const starMat = new THREE.PointsMaterial({
+            color: 0x00f2fe, // 极光蓝星空
+            size: 1.5,
+            map: createGlowTexture(),
+            transparent: true,
+            blending: THREE.AdditiveBlending, // 发光叠加
+            depthWrite: false
+        });
+
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+
+        // 鼠标视差交互
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // 动画循环：核心前进逻辑
+        function animateWarp() {
+            requestAnimationFrame(animateWarp);
+            
+            const positions = starGeo.attributes.position.array;
+            for(let i=0; i<starCount; i++) {
+                // 每颗星星的 Z 坐标增加，由于相机朝前看，星星就像扑面而来
+                positions[i*3+2] += starVelocity[i] * 5; // 速度倍率
+                
+                // 如果星星飞到了相机后面，就重置到遥远的远方，形成无限循环
+                if(positions[i*3+2] > 400) {
+                    positions[i*3+2] = -1600;
+                    // 重置时随机 X/Y，防止出现明显图案
+                    positions[i*3] = (Math.random() - 0.5) * 2000; 
+                    positions[i*3+1] = (Math.random() - 0.5) * 2000; 
+                }
+            }
+            starGeo.attributes.position.needsUpdate = true;
+
+            // 视差：根据鼠标轻微偏转飞行方向
+            camera.position.x += (mouseX * 100 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 100 - camera.position.y) * 0.05;
+            camera.lookAt(0, 0, -1000); // 始终看向隧道深处
+
+            renderer.render(scene, camera);
+        }
+        animateWarp();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+
+    <script>
+        const playlist = [
+            { name: "恋人 - 李荣浩", src: "恋人 - 李荣浩.mp3", lrc: "恋人 - 李荣浩.lrc" },
+            { name: "想你和我们的以后", src: "想你和我们的以后 - 苏运莹.flac", lrc: "想你和我们的以后 - 苏运莹.lrc" }
+        ];
+        let songIndex = 0;
+        let lrcData = [];
+        let isExpanded = false;
+        
+        const audio = document.getElementById('main-audio');
+        const lrcContainer = document.getElementById('lrc-container');
+        const lrcList = document.getElementById('lrc-list');
+        const playerBox = document.getElementById('music-player');
+        const expandIcon = document.getElementById('expand-icon');
+        
+        // ✨ 新增 DOM 获取
+        const progressBar = document.getElementById('progress-bar');
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
+
+        async function loadSong(idx) {
+            const song = playlist[idx];
+            document.getElementById('song-name').innerText = song.name;
+            audio.src = song.src;
+            progressBar.style.width = '0%';
+            timeCurrent.innerText = "00:00";
+            timeTotal.innerText = "00:00";
+            
+            lrcList.innerHTML = '<div class="lrc-spacer"></div><div class="lrc-line">歌词加载中...</div><div class="lrc-spacer"></div>';
+            
+            try {
+                const res = await fetch(song.lrc);
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                parseLrc(text);
+            } catch (e) {
+                lrcList.innerHTML = '<div class="lrc-spacer"></div><div class="lrc-line">纯音乐或暂无歌词</div><div class="lrc-spacer"></div>';
+                lrcData = [];
+            }
+        }
+
+        // 格式化时间 (秒 -> mm:ss)
+        function formatTime(seconds) {
+            if(isNaN(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+        }
+
+        // 歌曲元数据加载完毕后显示总时长
+        audio.addEventListener('loadedmetadata', () => {
+            timeTotal.innerText = formatTime(audio.duration);
+        });
+
+        function parseLrc(text) {
+            lrcData = [];
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                const match = line.match(/\[(\d{2,}):(\d{2}(?:\.\d{1,3})?)\](.*)/);
+                if (match && match[3].trim()) {
+                    lrcData.push({ time: parseInt(match[1]) * 60 + parseFloat(match[2]), text: match[3].trim() });
+                }
+            });
+            let html = '<div class="lrc-spacer"></div>';
+            html += lrcData.map((l, i) => `<div class="lrc-line" id="lrc-${i}">${l.text}</div>`).join('');
+            html += '<div class="lrc-spacer"></div>';
+            lrcList.innerHTML = html;
+        }
+
+        // 监听播放进度，更新进度条和歌词
+        audio.ontimeupdate = () => {
+            if(isNaN(audio.duration)) return;
+            const cur = audio.currentTime;
+            
+            // 更新进度条和当前时间
+            const progressPercent = (cur / audio.duration) * 100;
+            progressBar.style.width = progressPercent + '%';
+            timeCurrent.innerText = formatTime(cur);
+
+            // 更新歌词高亮
+            if(lrcData.length > 0) {
+                let index = lrcData.findIndex((l, i) => cur >= l.time && (!lrcData[i+1] || cur < lrcData[i+1].time));
+                if (index !== -1) {
+                    const currentActive = document.querySelector('.lrc-line.active');
+                    const newActive = document.getElementById(`lrc-${index}`);
+                    if (currentActive !== newActive) {
+                        if (currentActive) currentActive.classList.remove('active');
+                        if (newActive) newActive.classList.add('active');
+                        scrollToActiveLine();
+                    }
+                }
+            }
+        };
+
+        // ✨ 新增：点击进度条跳转播放位置
+        function seekAudio(e) {
+            if(isNaN(audio.duration)) return;
+            const container = document.getElementById('progress-container');
+            // 获取点击位置相对于容器宽度的比例
+            const clickX = e.offsetX;
+            const width = container.clientWidth;
+            const seekTime = (clickX / width) * audio.duration;
+            audio.currentTime = seekTime;
+        }
+
+        function scrollToActiveLine() {
+            const activeLine = document.querySelector('.lrc-line.active');
+            if (activeLine) {
+                const offset = activeLine.offsetTop - lrcContainer.clientHeight / 2 + activeLine.clientHeight / 2;
+                lrcContainer.scrollTo({ top: offset, behavior: 'smooth' });
+            }
+        }
+
+        function toggleExpand() {
+            isExpanded = !isExpanded;
+            if (isExpanded) {
+                playerBox.classList.add('expanded');
+                expandIcon.innerText = '🔽';
+                expandIcon.title = "收起歌词";
+            } else {
+                playerBox.classList.remove('expanded');
+                expandIcon.innerText = '🔼';
+                expandIcon.title = "展开歌词";
+            }
+            setTimeout(scrollToActiveLine, 400); 
+        }
+
+        function togglePlay() {
+            if (audio.paused) { 
+                audio.play(); 
+                document.getElementById('play-icon').innerText = '⏸️'; 
+            } else { 
+                audio.pause(); 
+                document.getElementById('play-icon').innerText = '▶️'; 
+            }
+        }
+
+        function nextSong() {
+            songIndex = (songIndex + 1) % playlist.length;
+            loadSong(songIndex);
+            audio.play();
+            document.getElementById('play-icon').innerText = '⏸️';
+        }
+
+        audio.addEventListener("ended", nextSong);
+        window.onload = () => loadSong(0);
+    </script>
+</body>
+</html>

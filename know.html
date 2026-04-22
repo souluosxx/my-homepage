@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术知识中心 | Knowledge Terminal</title>
+    <style>
+        :root {
+            --color-primary: #1890ff;
+            --color-bg: #f0f2f5;
+            --color-surface: #ffffff;
+            --color-text-main: #333333;
+            --color-text-sub: #666666;
+            --color-border: #e8e8e8;
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 侧边栏导航 */
+        .sidebar {
+            width: 240px;
+            background: var(--color-surface);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #111;
+        }
+        .nav-item {
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--color-text-sub);
+            transition: var(--transition);
+        }
+        .nav-item:hover { background: rgba(24, 144, 255, 0.05); color: var(--color-primary); }
+        .nav-item.active { background: rgba(24, 144, 255, 0.1); color: var(--color-primary); font-weight: 600; }
+
+        /* 主内容区与搜索 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+        .header-tools {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        input#searchBar {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+        input#searchBar:focus { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.2); }
+        .back-home {
+            padding: 12px 20px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--color-text-sub);
+            background: var(--color-surface);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .back-home:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+        /* 卡片网格布局 */
+        .card-list {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        }
+        .info-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        .info-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: #111; line-height: 1.4; flex: 1; margin-right: 10px;}
+        .card-tag { font-size: 12px; background: #e6f7ff; color: var(--color-primary); padding: 2px 8px; border-radius: 4px; border: 1px solid #91d5ff; white-space: nowrap; height: fit-content;}
+        
+        /* 核心：带有一键复制的 pre 代码块 */
+        .cmd-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .cmd-wrapper pre {
+            background: #f5f5f5;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #eb2f96; /* 醒目的命令行颜色 */
+            line-height: 1.5;
+            white-space: pre-wrap; /* 允许长命令自动换行 */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ffffff;
+            border: 1px solid #d9d9d9;
+            color: var(--color-text-sub);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            opacity: 0; /* 默认隐藏 */
+        }
+        .cmd-wrapper:hover .copy-btn { opacity: 1; /* 鼠标悬停代码块时显示按钮 */ }
+        .copy-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+        .copy-btn.success { background: #52c41a; color: white; border-color: #52c41a; opacity: 1; }
+
+        .card-desc { font-size: 14px; color: var(--color-text-sub); line-height: 1.6; margin-top: auto; white-space: pre-wrap;}
+        .author-tag { font-size: 12px; color: #999; margin-top: 10px; text-align: right; font-style: italic;}
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; border-bottom: 1px solid var(--color-border); }
+            .card-list { grid-template-columns: 1fr; }
+            .cmd-wrapper .copy-btn { opacity: 1; } /* 移动端始终显示复制按钮 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>知识库终端</h2>
+        <div class="nav-item active" onclick="switchTab('ICFS')">ICFS 命令</div>
+        <div class="nav-item" onclick="switchTab('GPFS')">GPFS 维护</div>
+        <div class="nav-item" onclick="switchTab('HARDWARE')">硬件运维</div>
+        <div class="nav-item" onclick="switchTab('CASES')">典型案例</div>
+        <div class="nav-item" onclick="switchTab('POLICY')">政策与密码</div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-tools">
+            <input type="text" id="searchBar" placeholder="全局搜索：输入命令、报错信息或案例描述..." oninput="filterCards()">
+            <a href="index.html" class="back-home">返回首页</a>
+        </div>
+        <div class="card-list" id="cardContainer">
+            </div>
+    </div>
+
+    <script>
+        // 1. 你刚刚转换出来的原生 ICFS JSON 数据
+        const rawIcfsJson = [
+          { "用途": "查询osd与盘符对应关系", "命令": "lsblk | grep icfs-155", "说明、实例或截图": "[icfs@m36-inspur09 ~]$lsblk | grep icfs-155\n└─sdad1   65:209    0    100M  0 part /var/lib/icfs/osd/icfs-155", "提交人": "冯立晓" },
+          { "用途": "Osd与节点、存储池分布\nOsd对应盘符、容量信息", "命令": "icfs osd tree\nicfs osd df tree", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查看单节点raid卡型号、硬盘及固件信息", "命令": "lsscsi    ", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查看本节点磁盘、槽位及对应服务状态", "命令": "icfs-admin-disk --disk", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查询down的osd，带host分布", "命令": " icfs osd tree | egrep 'host|down'", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查看各节点启动时间", "命令": "ansible all -m shell -a \"\"uptime -s\"\"", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "重启某节点全部osd", "命令": "systemctl daemon-reload;\nsystemctl restart icfs-osd.target", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": " fuse卸载挂载", "命令": "umount /mnt/icfs\nicfs-fuse /mnt/icfs", "说明、实例或截图": "当存储节点上边/mnt/icfs挂载目录没有的时候  执行icfs-fuse /mnt/icfs\n若执行有报错 挂载不上 先umount /mnt/icfs  再icfs-fuse /mnt/icfs\n若还不行 重启icfs-fuse服务 只影响单节点\nsystemctl restart icfs-fuse-monitor", "提交人": "冯立晓" },
+          { "用途": "OS下查询序列号（不使用ipmitool）", "命令": "sudo dmidecode -s system-serial-number", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查询OSD属于哪个存储池", "命令": "icfs osd pool tree  poolname  | grep -w osd.90", "说明、实例或截图": "[root@inspur02 ~]# icfs osd pool tree  pool_eras_8_2_0 |grep -w 90\n90      10.914        osd.90             up      65536   1", "提交人": "冯立晓" },
+          { "用途": "调整重构水位限制（默认0.93）", "命令": "icfs tell osd.* injectargs '--osd_backfill_full_ratio 0.94'\nicfs tell mon.* injectargs '--osd_backfill_full_ratio 0.94'", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "换盘weight与 location 信息确认", "命令": "通过 icfs osd find osd_id(同节点同类型 osd 序号)确认 location 信息；通过 icfs osd tree|grep osd_id 的方式确认 weight 值（与盘的 T 级容量接近）。", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "MDS均衡（任意节点执行）", "命令": "icfs-mds-balance", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "清理日志文件（按需使用）", "命令": "df -h\ndu -sh /var/log/* |grep G\nll -h /var/log/* |grep G\n按日期删除：find /var/log/icfs -type f -mtime +30  -delete\n杀掉logrotate进程：top -b -n 1 |grep logrotate |awk '{print $1}' |xargs -i kill -9 {}", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "查询smb客户端挂载的哪个节点", "命令": "ansible all -m shell -a \"\"icfs-smbd |grep ip\"\"（客户端ip）", "说明、实例或截图": "", "提交人": "冯立晓" },
+          { "用途": "踢盘脚本", "命令": "sh remove_osd.sh", "说明、实例或截图": "知识库搜索“remove_osd.sh”获取脚本", "提交人": "冯立晓" },
+          { "用途": "查看集群管理ip", "命令": "cat  /etc/ism/ism.conf", "说明、实例或截图": "", "提交人": "郭嘉良" },
+          { "用途": "查询CIFS所有客户端挂载的存储端ip 目录 总个数", "命令": "ansible all -m shell -a 'smbstatus -S'", "说明、实例或截图": "", "提交人": "王朝阳" },
+          { "用途": "重启负载均衡服务", "命令": "systemctl restart pdns", "说明、实例或截图": "", "提交人": "郭嘉良" },
+          { "用途": "存储服务的重启", "命令": "systemctl restart ganesha  #重启nfs协议服务\nsystemctl restart smb      #重启cifs协议服务\nsystemctl restart tgtd     #重启块协议服务", "说明、实例或截图": "", "提交人": "付壮壮" },
+          { "用途": "清理内存swap", "命令": "ansible all -m shell -a \"\"nohup sudo swapoff -a > /home/icfs/swapoff.log 2>&1 &\"\"", "说明、实例或截图": "清理这个需要持续一段时间，比较慢", "提交人": "付壮壮" },
+          { "用途": "“icfs -s”输出中存在 “ 1 pgs  inconsistent ”", "命令": "1. 执行以下命令查看哪些OG副本不一致：\nicfs health detail\n2. 根据步骤1的显示，确认inconsistent的pgid\n3. 执行以下命令来修复该OG：\nicfs pg repair <pgid>", "说明、实例或截图": "", "提交人": "付壮壮" },
+          { "用途": "对象存储当前各节点的虚拟IP及连接数", "命令": "ansible all -m shell -a \"\"ip a|grep scope|grep secondary;netstat -anptlx|grep 8009|wc -l\"\"", "说明、实例或截图": "默认每个节点512个", "提交人": "王朝阳" },
+          { "用途": "网口网卡错包丢包，光功率排查命令", "命令": "ethtool -m <ethname> | grep -A 1 Rec #查看网卡光模块收发光功率\nethtool -S <netname> | grep -Ei \"\"error|drop|crc\"\" #过滤网卡所有错误", "说明、实例或截图": "", "提交人": "杨颜宁" },
+          { "用途": "获取目录配额及实际占用命令", "命令": "getfattr -n icfs.dirquota.allpath -e text <目录路径> #获取配额汇总\ngetfattr -n icfs.dir.rbytes -e text <目录路径> #获取物理大小", "说明、实例或截图": "", "提交人": "杨颜宁" }
+        ];
+
+        // 2. 核心数据库，包含其他演示数据
+        const database = [
+            { cat: 'GPFS', title: '查看所有节点运行状态', cmd: 'mmgetstate -a', desc: 'active 代表正常，down 代表进程未启动。只能在存储节点执行。' },
+            { cat: 'GPFS', title: '查询坏盘', cmd: 'mmvdisk pdisk list --rg all --not-ok', desc: '状态为 missing/failing/replace 时需考虑换盘。' },
+            { cat: 'HARDWARE', title: '查看 RAID 状态与成员盘', cmd: 'storcli64 /cx/vall show all', desc: '检查 RAID 组健康度与槽位号 (SAS9361/9440/9460)。' },
+            { cat: 'CASES', title: 'GPFS 重启 GUI 报错', cmd: 'echo 524288 > /proc/sys/fs/inotify/max_user_watches\nsystemctl restart gpfsgui.service', desc: '报错 Failed to allocate directory watch: Too many open files 时使用。' },
+            { cat: 'POLICY', title: 'ICFS 默认密码', cmd: 'OS: root / inspuR@123\nGUI: superuser / inspuR@468', desc: '新老机型管理界面密码汇总。' }
+        ];
+
+        // 3. 【自动数据处理器】清洗 JSON 并合并到数据库
+        rawIcfsJson.forEach(item => {
+            // 过滤掉转换工具产生的无用空行和表头
+            if (item['用途'] && item['命令'] && item['用途'].trim() !== '用途') {
+                database.push({
+                    cat: 'ICFS',
+                    title: item['用途'],
+                    cmd: item['命令'],
+                    desc: item['说明、实例或截图'] || '（暂无详细说明）',
+                    author: item['提交人'] || '佚名'
+                });
+            }
+        });
+
+        let currentCategory = 'ICFS';
+
+        // 切换左侧标签
+        function switchTab(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                if(el.getAttribute('onclick').includes(cat)) el.classList.add('active');
+            });
+            renderCards(); 
+            document.getElementById('searchBar').value = '';
+        }
+
+        // 渲染卡片核心逻辑
+        function renderCards(filterQuery = '') {
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = '';
+            
+            const lowerFilter = filterQuery.toLowerCase();
+            const filteredData = database.filter(item => {
+                if (filterQuery) {
+                    return item.title.toLowerCase().includes(lowerFilter) || 
+                           item.cmd.toLowerCase().includes(lowerFilter) || 
+                           item.desc.toLowerCase().includes(lowerFilter);
+                }
+                return item.cat === currentCategory;
+            });
+
+            if(filteredData.length === 0) {
+                container.innerHTML = '<div style="color:#999;">未找到匹配的技术文档，请尝试更换关键词。</div>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'info-card';
+                const safeCmd = item.cmd.replace(/`/g, '\\`').replace(/'/g, "\\'");
+                const authorHtml = item.author ? `<div class="author-tag">提交人：${item.author}</div>` : '';
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-title">${item.title}</div>
+                        <span class="card-tag">${item.cat}</span>
+                    </div>
+                    <div class="cmd-wrapper">
+                        <pre><code>${item.cmd}</code></pre>
+                        <button class="copy-btn" onclick="copyCmd(this, \`${safeCmd}\`)">复制</button>
+                    </div>
+                    <div class="card-desc">${item.desc}</div>
+                    ${authorHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 触发搜索
+        function filterCards() {
+            const query = document.getElementById('searchBar').value;
+            renderCards(query);
+        }
+
+        // 一键复制并改变按钮状态
+        function copyCmd(btnElement, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.innerText;
+                btnElement.innerText = '已复制 ✔';
+                btnElement.classList.add('success');
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.classList.remove('success');
+                }, 2000);
+            }).catch(err => {
+                alert('复制失败，请手动选择复制。');
+            });
+        }
+
+        // 页面加载完毕初始化
+        window.onload = () => renderCards();
+    </script>
+</body>
+</html>
