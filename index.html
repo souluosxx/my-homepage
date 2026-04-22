@@ -94,6 +94,26 @@
             white-space: nowrap;
         }
 
+        * ========== 核心：下方文字盒子，宽度完美对齐上方按钮总宽度 ========== */
+.text-box {
+  /* 宽度100%继承父级.btn-group的总宽度，完美对齐！ */
+  width: 100%;
+  max-width: 100%;
+  /* 延续页面赛博风格：内边距、文字居中、配色 */
+  padding: 20px 12px;
+  text-align: center;
+  color: #ffffff;
+  line-height: 1.8; /* 行高，让文字舒展不拥挤 */
+  font-size: 16px;
+}
+
+/* 单独微调英文小字样式 */
+.text-box p:nth-child(2) {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 12px;
+}
+
         .link-btn:hover {
             background-color: var(--color-primary);
             color: #000; font-weight: 600;
@@ -161,9 +181,13 @@
         <div class="link-group">
             <a href="know.html" target="_blank" class="link-btn">🌌 知识库</a>
             <a href="linux.html" target="_blank" class="link-btn">🌌 命令库</a
-        <p class="motto">“ 霓虹之下，皆为赛博，代码之上，灵魂永生。”<br>Welcome to my soul space.</p>
+        <!-- <p class="motto">“ 霓虹之下，皆为赛博，代码之上，灵魂永生。”<br>Welcome to my soul space.</p> -->
 
         </div>
+        <div class="text-box">
+  <p>“霓虹之下，皆为赛博，代码之上，灵魂永生。”</p>
+  <p>Welcome to my soul space.</p>
+</div>
         
     </div>
 
