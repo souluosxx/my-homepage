@@ -12,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="css/index.css?v=1776391919569">
     <script src="js/dark-mode.min.js"></script>
     <script type="module" src="js/github-corners.js"></script>
+    <base href="/">
 </head>
 <body>
 <dark-mode permanent dark="Dark" light="Light" style="position: fixed;left: 10px;top: 8px; z-index: 999;"></dark-mode>
@@ -29,11 +30,11 @@
             <!-- <li><a href="#"><strong>find</strong> - 指定目录下查找文件。</a></li> -->
           </ul>
           <input type="text" class="query" id="query" autocomplete="off" autofocus="autofocus" placeholder="Linux 命令搜索"/>
-          <div class="enter-input">
+         <div class="enter-input">
               <input type="hidden" id="current_path" value="">
               <script>
-                  // 终极修复：强制剥离开头斜杠，使底层逻辑计算出的根路径永远绝对等于 "/"
-                  document.getElementById('current_path').value = window.location.pathname.substring(1);
+                  // 让 js 底层逻辑算出空字符串 ""，然后交给 <base> 标签统一定位到根目录
+                  document.getElementById('current_path').value = window.location.pathname;
               </script>
               <button id="search_btn">搜索</button>
           </div>
