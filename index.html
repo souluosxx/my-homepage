@@ -50,13 +50,11 @@
             box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
         }
         .motto {
-            display: block;       /* 变成块级元素 */
-    width: 100%;          /* 占满全宽 */
-    padding: 24px;        /* 使用和按钮一样的内边距 */
-    box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
-    
-            /* font-size: 15px; color: rgba(255, 255, 255, 0.6); */
-            /* margin-bottom: 30px; line-height: 1.5; font-style: italic; */
+      
+    flex: 1; /* 核心：让它自动撑开，占满全部可用空间 */
+    max-width: 100%; /* 彻底解除之前的 160px 封印 */
+            font-size: 15px; color: rgba(255, 255, 255, 0.6); 
+            margin-bottom: 30px; line-height: 1.5; font-style: italic; 
         }
 
         .card::before {
