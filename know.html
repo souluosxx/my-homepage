@@ -165,7 +165,7 @@
 <body>
 
     <div class="sidebar">
-        <h2>知识库终端</h2>
+        <h2>知识库</h2>
         <div class="nav-item active" onclick="switchTab('ICFS')">ICFS 命令</div>
         <div class="nav-item" onclick="switchTab('GPFS')">GPFS 维护</div>
         <div class="nav-item" onclick="switchTab('HARDWARE')">硬件运维</div>
@@ -183,43 +183,902 @@
     </div>
 
     <script>
-        // 1. 你刚刚转换出来的原生 ICFS JSON 数据
-        const rawIcfsJson = [
-          { "用途": "查询osd与盘符对应关系", "命令": "lsblk | grep icfs-155", "说明、实例或截图": "[icfs@m36-inspur09 ~]$lsblk | grep icfs-155\n└─sdad1   65:209    0    100M  0 part /var/lib/icfs/osd/icfs-155", "提交人": "冯立晓" },
-          { "用途": "Osd与节点、存储池分布\nOsd对应盘符、容量信息", "命令": "icfs osd tree\nicfs osd df tree", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查看单节点raid卡型号、硬盘及固件信息", "命令": "lsscsi    ", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查看本节点磁盘、槽位及对应服务状态", "命令": "icfs-admin-disk --disk", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查询down的osd，带host分布", "命令": " icfs osd tree | egrep 'host|down'", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查看各节点启动时间", "命令": "ansible all -m shell -a \"\"uptime -s\"\"", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "重启某节点全部osd", "命令": "systemctl daemon-reload;\nsystemctl restart icfs-osd.target", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": " fuse卸载挂载", "命令": "umount /mnt/icfs\nicfs-fuse /mnt/icfs", "说明、实例或截图": "当存储节点上边/mnt/icfs挂载目录没有的时候  执行icfs-fuse /mnt/icfs\n若执行有报错 挂载不上 先umount /mnt/icfs  再icfs-fuse /mnt/icfs\n若还不行 重启icfs-fuse服务 只影响单节点\nsystemctl restart icfs-fuse-monitor", "提交人": "冯立晓" },
-          { "用途": "OS下查询序列号（不使用ipmitool）", "命令": "sudo dmidecode -s system-serial-number", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查询OSD属于哪个存储池", "命令": "icfs osd pool tree  poolname  | grep -w osd.90", "说明、实例或截图": "[root@inspur02 ~]# icfs osd pool tree  pool_eras_8_2_0 |grep -w 90\n90      10.914        osd.90             up      65536   1", "提交人": "冯立晓" },
-          { "用途": "调整重构水位限制（默认0.93）", "命令": "icfs tell osd.* injectargs '--osd_backfill_full_ratio 0.94'\nicfs tell mon.* injectargs '--osd_backfill_full_ratio 0.94'", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "换盘weight与 location 信息确认", "命令": "通过 icfs osd find osd_id(同节点同类型 osd 序号)确认 location 信息；通过 icfs osd tree|grep osd_id 的方式确认 weight 值（与盘的 T 级容量接近）。", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "MDS均衡（任意节点执行）", "命令": "icfs-mds-balance", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "清理日志文件（按需使用）", "命令": "df -h\ndu -sh /var/log/* |grep G\nll -h /var/log/* |grep G\n按日期删除：find /var/log/icfs -type f -mtime +30  -delete\n杀掉logrotate进程：top -b -n 1 |grep logrotate |awk '{print $1}' |xargs -i kill -9 {}", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "查询smb客户端挂载的哪个节点", "命令": "ansible all -m shell -a \"\"icfs-smbd |grep ip\"\"（客户端ip）", "说明、实例或截图": "", "提交人": "冯立晓" },
-          { "用途": "踢盘脚本", "命令": "sh remove_osd.sh", "说明、实例或截图": "知识库搜索“remove_osd.sh”获取脚本", "提交人": "冯立晓" },
-          { "用途": "查看集群管理ip", "命令": "cat  /etc/ism/ism.conf", "说明、实例或截图": "", "提交人": "郭嘉良" },
-          { "用途": "查询CIFS所有客户端挂载的存储端ip 目录 总个数", "命令": "ansible all -m shell -a 'smbstatus -S'", "说明、实例或截图": "", "提交人": "王朝阳" },
-          { "用途": "重启负载均衡服务", "命令": "systemctl restart pdns", "说明、实例或截图": "", "提交人": "郭嘉良" },
-          { "用途": "存储服务的重启", "命令": "systemctl restart ganesha  #重启nfs协议服务\nsystemctl restart smb      #重启cifs协议服务\nsystemctl restart tgtd     #重启块协议服务", "说明、实例或截图": "", "提交人": "付壮壮" },
-          { "用途": "清理内存swap", "命令": "ansible all -m shell -a \"\"nohup sudo swapoff -a > /home/icfs/swapoff.log 2>&1 &\"\"", "说明、实例或截图": "清理这个需要持续一段时间，比较慢", "提交人": "付壮壮" },
-          { "用途": "“icfs -s”输出中存在 “ 1 pgs  inconsistent ”", "命令": "1. 执行以下命令查看哪些OG副本不一致：\nicfs health detail\n2. 根据步骤1的显示，确认inconsistent的pgid\n3. 执行以下命令来修复该OG：\nicfs pg repair <pgid>", "说明、实例或截图": "", "提交人": "付壮壮" },
-          { "用途": "对象存储当前各节点的虚拟IP及连接数", "命令": "ansible all -m shell -a \"\"ip a|grep scope|grep secondary;netstat -anptlx|grep 8009|wc -l\"\"", "说明、实例或截图": "默认每个节点512个", "提交人": "王朝阳" },
-          { "用途": "网口网卡错包丢包，光功率排查命令", "命令": "ethtool -m <ethname> | grep -A 1 Rec #查看网卡光模块收发光功率\nethtool -S <netname> | grep -Ei \"\"error|drop|crc\"\" #过滤网卡所有错误", "说明、实例或截图": "", "提交人": "杨颜宁" },
-          { "用途": "获取目录配额及实际占用命令", "命令": "getfattr -n icfs.dirquota.allpath -e text <目录路径> #获取配额汇总\ngetfattr -n icfs.dir.rbytes -e text <目录路径> #获取物理大小", "说明、实例或截图": "", "提交人": "杨颜宁" }
-        ];
+        // // 1. 你刚刚转换出来的原生 ICFS JSON 数据
+        // const rawIcfsJson = [
+        //   { "用途": "查询osd与盘符对应关系", "命令": "lsblk | grep icfs-155", "说明、实例或截图": "[icfs@m36-inspur09 ~]$lsblk | grep icfs-155\n└─sdad1   65:209    0    100M  0 part /var/lib/icfs/osd/icfs-155", "提交人": "冯立晓" },
+        //   { "用途": "Osd与节点、存储池分布\nOsd对应盘符、容量信息", "命令": "icfs osd tree\nicfs osd df tree", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查看单节点raid卡型号、硬盘及固件信息", "命令": "lsscsi    ", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查看本节点磁盘、槽位及对应服务状态", "命令": "icfs-admin-disk --disk", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查询down的osd，带host分布", "命令": " icfs osd tree | egrep 'host|down'", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查看各节点启动时间", "命令": "ansible all -m shell -a \"\"uptime -s\"\"", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "重启某节点全部osd", "命令": "systemctl daemon-reload;\nsystemctl restart icfs-osd.target", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": " fuse卸载挂载", "命令": "umount /mnt/icfs\nicfs-fuse /mnt/icfs", "说明、实例或截图": "当存储节点上边/mnt/icfs挂载目录没有的时候  执行icfs-fuse /mnt/icfs\n若执行有报错 挂载不上 先umount /mnt/icfs  再icfs-fuse /mnt/icfs\n若还不行 重启icfs-fuse服务 只影响单节点\nsystemctl restart icfs-fuse-monitor", "提交人": "冯立晓" },
+        //   { "用途": "OS下查询序列号（不使用ipmitool）", "命令": "sudo dmidecode -s system-serial-number", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查询OSD属于哪个存储池", "命令": "icfs osd pool tree  poolname  | grep -w osd.90", "说明、实例或截图": "[root@inspur02 ~]# icfs osd pool tree  pool_eras_8_2_0 |grep -w 90\n90      10.914        osd.90             up      65536   1", "提交人": "冯立晓" },
+        //   { "用途": "调整重构水位限制（默认0.93）", "命令": "icfs tell osd.* injectargs '--osd_backfill_full_ratio 0.94'\nicfs tell mon.* injectargs '--osd_backfill_full_ratio 0.94'", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "换盘weight与 location 信息确认", "命令": "通过 icfs osd find osd_id(同节点同类型 osd 序号)确认 location 信息；通过 icfs osd tree|grep osd_id 的方式确认 weight 值（与盘的 T 级容量接近）。", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "MDS均衡（任意节点执行）", "命令": "icfs-mds-balance", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "清理日志文件（按需使用）", "命令": "df -h\ndu -sh /var/log/* |grep G\nll -h /var/log/* |grep G\n按日期删除：find /var/log/icfs -type f -mtime +30  -delete\n杀掉logrotate进程：top -b -n 1 |grep logrotate |awk '{print $1}' |xargs -i kill -9 {}", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "查询smb客户端挂载的哪个节点", "命令": "ansible all -m shell -a \"\"icfs-smbd |grep ip\"\"（客户端ip）", "说明、实例或截图": "", "提交人": "冯立晓" },
+        //   { "用途": "踢盘脚本", "命令": "sh remove_osd.sh", "说明、实例或截图": "知识库搜索“remove_osd.sh”获取脚本", "提交人": "冯立晓" },
+        //   { "用途": "查看集群管理ip", "命令": "cat  /etc/ism/ism.conf", "说明、实例或截图": "", "提交人": "郭嘉良" },
+        //   { "用途": "查询CIFS所有客户端挂载的存储端ip 目录 总个数", "命令": "ansible all -m shell -a 'smbstatus -S'", "说明、实例或截图": "", "提交人": "王朝阳" },
+        //   { "用途": "重启负载均衡服务", "命令": "systemctl restart pdns", "说明、实例或截图": "", "提交人": "郭嘉良" },
+        //   { "用途": "存储服务的重启", "命令": "systemctl restart ganesha  #重启nfs协议服务\nsystemctl restart smb      #重启cifs协议服务\nsystemctl restart tgtd     #重启块协议服务", "说明、实例或截图": "", "提交人": "付壮壮" },
+        //   { "用途": "清理内存swap", "命令": "ansible all -m shell -a \"\"nohup sudo swapoff -a > /home/icfs/swapoff.log 2>&1 &\"\"", "说明、实例或截图": "清理这个需要持续一段时间，比较慢", "提交人": "付壮壮" },
+        //   { "用途": "“icfs -s”输出中存在 “ 1 pgs  inconsistent ”", "命令": "1. 执行以下命令查看哪些OG副本不一致：\nicfs health detail\n2. 根据步骤1的显示，确认inconsistent的pgid\n3. 执行以下命令来修复该OG：\nicfs pg repair <pgid>", "说明、实例或截图": "", "提交人": "付壮壮" },
+        //   { "用途": "对象存储当前各节点的虚拟IP及连接数", "命令": "ansible all -m shell -a \"\"ip a|grep scope|grep secondary;netstat -anptlx|grep 8009|wc -l\"\"", "说明、实例或截图": "默认每个节点512个", "提交人": "王朝阳" },
+        //   { "用途": "网口网卡错包丢包，光功率排查命令", "命令": "ethtool -m <ethname> | grep -A 1 Rec #查看网卡光模块收发光功率\nethtool -S <netname> | grep -Ei \"\"error|drop|crc\"\" #过滤网卡所有错误", "说明、实例或截图": "", "提交人": "杨颜宁" },
+        //   { "用途": "获取目录配额及实际占用命令", "命令": "getfattr -n icfs.dirquota.allpath -e text <目录路径> #获取配额汇总\ngetfattr -n icfs.dir.rbytes -e text <目录路径> #获取物理大小", "说明、实例或截图": "", "提交人": "杨颜宁" }
+        // ];
 
-        // 2. 核心数据库，包含其他演示数据
-        const database = [
-            { cat: 'GPFS', title: '查看所有节点运行状态', cmd: 'mmgetstate -a', desc: 'active 代表正常，down 代表进程未启动。只能在存储节点执行。' },
-            { cat: 'GPFS', title: '查询坏盘', cmd: 'mmvdisk pdisk list --rg all --not-ok', desc: '状态为 missing/failing/replace 时需考虑换盘。' },
-            { cat: 'HARDWARE', title: '查看 RAID 状态与成员盘', cmd: 'storcli64 /cx/vall show all', desc: '检查 RAID 组健康度与槽位号 (SAS9361/9440/9460)。' },
-            { cat: 'CASES', title: 'GPFS 重启 GUI 报错', cmd: 'echo 524288 > /proc/sys/fs/inotify/max_user_watches\nsystemctl restart gpfsgui.service', desc: '报错 Failed to allocate directory watch: Too many open files 时使用。' },
-            { cat: 'POLICY', title: 'ICFS 默认密码', cmd: 'OS: root / inspuR@123\nGUI: superuser / inspuR@468', desc: '新老机型管理界面密码汇总。' }
-        ];
+        // // 2. 核心数据库，包含其他演示数据
+        // const database = [
+        //     { cat: 'GPFS', title: '查看所有节点运行状态', cmd: 'mmgetstate -a', desc: 'active 代表正常，down 代表进程未启动。只能在存储节点执行。' },
+        //     { cat: 'GPFS', title: '查询坏盘', cmd: 'mmvdisk pdisk list --rg all --not-ok', desc: '状态为 missing/failing/replace 时需考虑换盘。' },
+        //     { cat: 'HARDWARE', title: '查看 RAID 状态与成员盘', cmd: 'storcli64 /cx/vall show all', desc: '检查 RAID 组健康度与槽位号 (SAS9361/9440/9460)。' },
+        //     { cat: 'CASES', title: 'GPFS 重启 GUI 报错', cmd: 'echo 524288 > /proc/sys/fs/inotify/max_user_watches\nsystemctl restart gpfsgui.service', desc: '报错 Failed to allocate directory watch: Too many open files 时使用。' },
+        //     { cat: 'POLICY', title: 'ICFS 默认密码', cmd: 'OS: root / inspuR@123\nGUI: superuser / inspuR@468', desc: '新老机型管理界面密码汇总。' }
+        // ];
+
+        const database = ref([
+  // ================= ICFS 常用命令 =================
+  {
+    "cat": "ICFS",
+    "title": "查询osd与盘符对应关系",
+    "cmd": "lsblk | grep icfs-155",
+    "desc": "[icfs@m36-inspur09 ~]$lsblk | grep icfs-155\n└─sdad1   65:209    0    100M  0 part /var/lib/icfs/osd/icfs-155",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "Osd与节点、存储池分布 / Osd对应盘符、容量信息",
+    "cmd": "icfs osd tree\nicfs osd df tree",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查看单节点raid卡型号、硬盘及固件信息",
+    "cmd": "lsscsi    ",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查看本节点磁盘、槽位及对应服务状态",
+    "cmd": "icfs-admin-disk --disk",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查询down的osd，带host分布",
+    "cmd": " icfs osd tree | egrep 'host|down'",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查看各节点启动时间",
+    "cmd": "ansible all -m shell -a \"uptime -s\"",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "重启某节点全部osd",
+    "cmd": "systemctl daemon-reload;\nsystemctl restart icfs-osd.target",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "fuse卸载挂载",
+    "cmd": "umount /mnt/icfs\nicfs-fuse /mnt/icfs",
+    "desc": "当存储节点上边/mnt/icfs挂载目录没有的时候  执行icfs-fuse /mnt/icfs\n若执行有报错 挂载不上 先umount /mnt/icfs  再icfs-fuse /mnt/icfs\n若还不行 重启icfs-fuse服务 只影响单节点\nsystemctl restart icfs-fuse-monitor",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "OS下查询序列号（不使用ipmitool）",
+    "cmd": "sudo dmidecode -s system-serial-number",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查询OSD属于哪个存储池",
+    "cmd": "icfs osd pool tree  poolname  l grep -w osd.90",
+    "desc": "[root@inspur02 ~]# icfs osd pool tree  pool_eras_8_2_0 |grep -w 90\n90      10.914        osd.90             up      65536   1",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "调整重构水位限制（默认0.93）",
+    "cmd": "icfs tell osd.* injectargs '--osd_backfill_full_ratio 0.94'\nicfs tell mon.* injectargs '--osd_backfill_full_ratio 0.94'",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "调整数据写入水位（默认0.95）",
+    "cmd": "icfs pg dump |grep ratio\nicfs daemon osd.10 config show |grep full\nicfs tell osd.* injectargs \"--mon_osd_full_ratio=0.96\"\nicfs pg set_full_ratio 0.96",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "换盘weight与 location 信息确认",
+    "cmd": "通过 icfs osd find osd_id(同节点同类型 osd 序号)确认 location 信息；通过 icfs osd tree|grep osd_id 的方式确认 weight 值（与盘的 T 级容量接近）。",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "MDS均衡（任意节点执行）",
+    "cmd": "icfs-mds-balance",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "清理日志文件（按需使用）",
+    "cmd": "df -h\ndu -sh /var/log/* |grep G\nll -h /var/log/* |grep G\n按日期删除：find /var/log/icfs -type f -mtime +30  -delete\n处理icfs-client日志：\nls |grep icfs-client |wc -l\nrm -rf icfs-client.*.log-2024*.gz\n重要日志用清空：echo \"\" > icfs-mds.11.log\n杀掉logrotate进程：top -b -n 1 |grep logrotate |awk '{print $1}' |xargs -i kill -9 {}",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "登录管软cli",
+    "cmd": "ismcli（依次输入存储系统“用户名”和“密码”）\nexit（退出）",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查询smb客户端挂载的哪个节点",
+    "cmd": "ansible all -m shell -a \"icfs-smbd |grep ip\"（客户端ip）",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "踢盘脚本",
+    "cmd": "sh remove_osd.sh",
+    "desc": "知识库搜索“remove_osd.sh”获取脚本",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查看集群管理ip",
+    "cmd": "cat  /etc/ism/ism.conf",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "ICFS",
+    "title": "查询CIFS所有客户端挂载的存储端ip 目录 总个数",
+    "cmd": "ansible all -m shell -a 'smbstatus -S'",
+    "desc": "",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "ICFS",
+    "title": "重启负载均衡服务",
+    "cmd": "systemctl restart pdns",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "ICFS",
+    "title": "脚本重启管软服务",
+    "cmd": "sh /usr/local/ism/sysmgt/sbin/ismStorage.sh   stop/start/restart",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "ICFS",
+    "title": "存储服务的重启",
+    "cmd": "systemctl restart ganesha  #重启nfs协议服务\nsystemctl restart smb      #重启cifs协议服务\nsystemctl restart tgtd     #重启块协议服务\nsystemctl  restart  icfs-radosgw@radosgw.gateway  #重启对象协议服务",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "ICFS",
+    "title": "mon db 占用过大",
+    "cmd": "\tIcfs –s显示 mon low disk space\n1.针对重构期间的mondb过大，持续关注，重构完成后即可恢复。\n\t2. 对于manifest文件过大导致的low disk space，在各个mon节点执行如下命令查看MANIFEST 占用情况：\nls -lh /var/lib/icfs/mon/icfs-${i}/store.db/|grep MANIFEST\n针对超过5G的节点，建议在故障冗余度内参考如下命令重启mon服务。\nsystemctl restart icfs-mon@{节点hostname/} \n",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "ICFS",
+    "title": "清理内存swap",
+    "cmd": "ansible all -m shell -a \"nohup sudo swapoff -a > /home/icfs/swapoff.log 2>&1 &\"",
+    "desc": "清理这个需要持续一段时间，比较慢",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "ICFS",
+    "title": "“icfs -s”输出中存在 “ 1 pgs  inconsistent ”",
+    "cmd": "1. 执行以下命令查看哪些OG副本不一致：\nicfs health detail\n2. 根据步骤1的显示，确认inconsistent的pgid\n3. 执行以下命令来修复该OG：\nicfs pg repair <pgid>",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "ICFS",
+    "title": "对象存储当前各节点的虚拟IP及连接数（默认每个节点512个，）",
+    "cmd": "ansible all -m shell -a \"ip a|grep scope|grep secondary;netstat -anptlx|grep 8009|grep radosgw|grep -vi listen|wc -l\"",
+    "desc": "",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "ICFS",
+    "title": "网口网卡错包丢包，光功率排查命令",
+    "cmd": "用ifconfig或者netstat -i查看丢包的网口及类型，随后可以ethtool -i 网口查看网卡的驱动版本和FW版本；\nethtool -m <ethname> | grep -A 1 Rec 查看网卡光模块收发光功率\nethtool -S <netname> | grep -Ei \"error|drop|crc\" #过滤网卡所有错误、丢包、CRC 异常\nsar -n DEV 1 #网络流量 每隔 1秒 报告一次网络设备的流量统计\nsar -n EDEV 1 #网络丢包、错包情况每隔 1秒 报告一次网络设备的错误统计\n",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "ICFS",
+    "title": "获取目录配额及实际占用命令",
+    "cmd": "getfattr -n icfs.dirquota.allpath -e text <目录路径> 获取该目录下所有子目录的配额汇总信息\ngetfattr -n icfs.dir.rbytes -e text <目录路径>   获取目录实际占用的物理大小",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+
+  // ================= GPFS 常用命令 =================
+  {
+    "cat": "GPFS",
+    "title": "查看所有节点的运行状态（只能在存储节点执行）",
+    "cmd": "mmgetstate  -a",
+    "desc": "active   gpfs进程正常运行；\ndown    gpfs进程未启动；\narbitrating gpfs进程在启动过程中；\nunknown 节点宕机或者网络异常，查询不到节点的状态。",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查询坏盘（状态为missing/failing/replace需要考虑换盘）",
+    "cmd": "mmvdisk pdisk list --rg all --not-ok",
+    "desc": "declustered recovery group pdisk array paths capacity free space FRU (type)  state\nrg_1 n005p002 DA1 0 894 GiB 890 GiB PX04PMB096 \nfailing/replace",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "集群服务重启",
+    "cmd": "重启所有节点服务：\nmmshutdown -a\nmmstartup -a\n重启某个节点（包括客户端）服务（任一存储节点执行）\nmmshutdown -N epaimaster（节点名）\nmmstartup -N epaimaster（节点名）",
+    "desc": "mmshutdown -a 执行后等1分钟， 然后 mmstartup -a",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "集群状态",
+    "cmd": "mmhealth cluster show node\nmmhealth node show",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "修改账户密码",
+    "cmd": "/usr/lpp/mmfs/gui/cli/chuser admin -p  <newpassword>\n在GUI节点执行，  如果不知道那个是GUI节点 通过mmhealth  cluster show gui  来判断那个节点是gui节点",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "删除文件系统",
+    "cmd": "mmvdisk fs list\nmmumount gpfs -a\nmmlsmount gpfs -L\nmmvdisk fs delete --fs gpfs\nmmvdisk fs list",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "收集日志",
+    "cmd": "命令行方式：gpfs.snap -a\n等待收集完成后 在/tmp下生成日志文件：\n/tmp/gpfs.snapOut/27348/gpfs.snap.xxx.out.tar.gz\nGUI界面收集：\n通过首页-->Support-->Diagnostic Data，选择要收集的日志项，进行日志收集，收集完成后会保存在gui节点/tmp/gpfs.snapOut/2**48/   同时会下载到本地",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "列出存储池",
+    "cmd": "mmlspool gpfs",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "重启GUI",
+    "cmd": "mmhealth  cluster show gui\nsystemctl restart gpfsgui.service",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "挂载",
+    "cmd": "df -h\n/usr/lpp/mmfs/bin/mmmount  big-models",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "客户端重启GPFS进程",
+    "cmd": "mmshutdown \nmmstartup\n（需要时加工具路径：/usr/lpp/mmfs/bin/）",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "通过rpm包的形式查看gpfs的版本号",
+    "cmd": "rpm -qa | grep gpfs",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查询有ces的节点",
+    "cmd": "mmlscluster --ces",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查询磁盘的唯一编码",
+    "cmd": "mmlspdisk rg1 --pdisk n005p018",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查询pdisk详情（可输出对应磁盘盘符、对应节点名、SN）",
+    "cmd": "mmvdisk pdisk list --rg rg1 --pdisk n002p001 -L",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查看盘符（列表）",
+    "cmd": "tspreparedisk -s",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查看哪些节点挂载了文件系统",
+    "cmd": "mmlsmount gpfs -L ",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "GPFS",
+    "title": "gpfs查看磁盘水位",
+    "cmd": "mmdf gpfs",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "GPFS",
+    "title": "检查 DA 重建与重平衡状态（换盘后）",
+    "cmd": "\nmmvdisk rg list --da\n",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查看集群中处于“非健康”（unhealthy）状态的节点信息。",
+    "cmd": "mmhealth cluster show node --unhealthy",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "GPFS",
+    "title": "查看集群中所有的 RG 列表",
+    "cmd": "mmvdisk rg list",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "GPFS",
+    "title": "显示GPFS集群的当前配置信息",
+    "cmd": "mmlscluster",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "GPFS",
+    "title": "刷新告警状态",
+    "cmd": "1.若告警节点为计算节点，在该计算节点上执行以下命令刷新告警状态：该命令仅用于更新告警状态，不影响业务正常运行。\n2.若告警节点为存储节点，或执行上述命令后告警仍未消除，请拨打浪潮售后服务电话咨询处理。\n/usr/lpp/mmfs/bin/mmsysmoncontrol  restart",
+    "desc": "注意：GUI界面展示的告警信息并非实时更新，存在一定延迟。部分告警会随问题自动解决而同步消除，另有部分告警需通过上述命令手动刷新撤销",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "GPFS",
+    "title": "gpfs的gui管理平台账号密码设置永久生效",
+    "cmd": "/usr/lpp/mmfs/gui/cli/chuser admin -e 1",
+    "desc": "需要在gui的节点上执行",
+    "author": "付壮壮"
+  },
+
+  // ================= 硬件运维 =================
+  {
+    "cat": "HARDWARE",
+    "title": "查看单节点raid卡型号、硬盘及固件信息",
+    "cmd": "lsscsi    ",
+    "desc": "[0:0:0:0]    disk    ATA    ST16000NM001G-2K SN03    /dev/sdb    /dev/sg1\n[0:0:1:0]    disk    ATA    ST16000NM001G-2K SN03    /dev/sdc    /dev/sg2\n[0:0:2:0]    disk    ATA    ST16000NM001G-2K SN03    /dev/sdd    /dev/sg3",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "点亮节点定位灯",
+    "cmd": "ipmitool chassis identify force",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看 RAID状态和故障成员盘的槽位",
+    "cmd": "SAS3008:sas3ircu <index> status\nSAS9361/SAS9440/SAS9460:storcli64 /cx/vall show all\nPM8222/PM8204:arcconf <controller id> getconfig ld",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "针对 SAS9361/SAS9440/SAS9460，采用如下命令进行 RAID1 成员盘的状态的切换；只有更换的硬盘的状态为 UGood，RAID 卡才能自动重构",
+    "cmd": "UBad 切换成 UGood/F：storcli64 /cx/ex/sx set good force\nUGood/F 切换成 UGood：storcli64 /cx/fall delete\nJBOD 切换成 UGood：storcli64 /cx/ex/sx set good force",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "系统盘点灯",
+    "cmd": "1、通过smartctl命令获取硬盘序列号\n2、通过sas3ircu 0 display | grep 硬盘序列号  确定磁盘槽位号，slot即为槽位号\n3、sas3ircu 0 locate 2:槽位号 on点亮",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "关闭蜂鸣声",
+    "cmd": "storcli64 /c0 set alarm=silence",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "清除BMC告警日志",
+    "cmd": "ipmitool sel clear",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "重启BMC",
+    "cmd": "ipmitool mc reset cold",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "列出pcie设备（通过报错的BDF号定位pcue设备）",
+    "cmd": "lspci -vt",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看nvme的bdf",
+    "cmd": "ll /sys/block/nvme*",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "点亮网口灯",
+    "cmd": "ethtool -p 网口名",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看集群所有的cpu温度",
+    "cmd": "ansible all -m shell -a 'ipmitool sensor list'Igrep -i 'cpu'lgrep-i 'temp'Igrep -i 'core'",
+    "desc": "",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看设备的序列号",
+    "cmd": "ipmitool fru",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看bmc的IP",
+    "cmd": "ipmitool  lan  print 1",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "重置BMC指定账户密码",
+    "cmd": "ipmitool user list 1\nipmitool user set password <用户ID> <新密码>",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "添加新BMC用户密码",
+    "cmd": "ipmitool user set name 2 admin2 # 设置ID为2的用户名admin2\nipmitool user set password 2 admin123456789 # 设置ID为2的用户密码为admin123456789\nipmitool user priv 2 4 1 # 设置ID为2的用户在通道1的权限为管理员级（4级）\nipmitool user enable 2 # 启用ID为2的用户",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "查看网卡的速率",
+    "cmd": "ethtool 网卡名 | grep -i \"Speed\\|Supported link modes\"",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "beeGFS 换盘",
+    "cmd": "beegfs产品全部都是做的硬raid，一般换盘直接拔插即可，更换完成后关注硬盘重构和raid状态（使用raid卡的命令）",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "ipmitool 配置IP",
+    "cmd": "ipmitool lan set 1 ipsrc static  设置成静态\nipmitool lan set 1 ipaddr {IP}  设置IP地址\nipmitool lan set 1 netmask {掩码}  设置子网掩码\nipmitool lan set 1 defgw ipaddr {网关}  设置网关\nipmitool lan set 1 access on 允许远程用户通过这个通道访问 BMC\nipmitool lan print   打印配置",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "HARDWARE",
+    "title": "重新加载驱动ipmitool驱动",
+    "cmd": "modprobe -r ipmi_si\nmodprobe -r ipmi_devintf\nmodprobe -r ipmi_watchdog \nmodprobe -r ipmi_msghander\nmodprobe ipmi_msghander\nmodprobe ipmi_devintf\nmodprobe ipmi_si\nsystemctl restart watchdog",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+
+  // ================= 典型案例 =================
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 换盘",
+    "cmd": "1、高水位换盘用换盘脚本upmap_disk_change.sh，步骤参照readme\n2、老版本设备视图不显示槽位号，按从左到右从上到下的顺序从0开始数即可\n3、管软根据槽位如果查到的盘不对，有可能是误报（前期换过盘告警没清除）\n4、不能准确定位盘的时候可以尝试拔出盘确认，不对的话再及时插回去，没有影响",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] NTP调整",
+    "cmd": "38720及之后的版本支持NTP换时钟源，可以在管软直接修改，会自动慢慢的同步；更低的版本每次调整20S",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] 重启GUI报错：Failed to allocate directory watch: Too many open files",
+    "cmd": "# 调整inotify最大监控目录数\necho 524288 > /proc/sys/fs/inotify/max_user_watches\n # 调整inotify最大实例数\necho 256 > /proc/sys/fs/inotify/max_user_instances\n\n修改 inotify 资源限制：编辑 /etc/sysctl.conf，添加以下内容：\n    fs.inotify.max_user_watches = 524288\n    fs.inotify.max_user_instances = 256\nsysctl -p然后再重启试一下systemctl restart gpfsgui.service",
+    "desc": "故障原因: inotify默认值不够",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] GPFS节点上无法执行mmvdisk等命令",
+    "cmd": "# 复制单个mmvdisk可执行文件到目标节点（替换node02为实际节点名）\nscp /usr/lpp/mmfs/bin/mmvdisk root@node02:/usr/lpp/mmfs/bin/\n# 若有依赖库，复制整个bin目录（按需）\nscp -r /usr/lpp/mmfs/bin/ root@node02:/usr/lpp/mmfs/bin/\n# 加gpfs环境变量\necho \"PATH=/sbin:/usr/sbin:/usr/local/sbin:/usr/lpp/mmfs/bin/:\\$PATH\" >> /root/.bash_profile\nsource /root/.bash_profile",
+    "desc": "故障原因: 环境安装有问题",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] DP2000删除备份数据",
+    "cmd": "1、zfs list找到占用多的任务，\n2、界面在备份集里失效这个任务的历史备份集，等几个小时看空间回收吗？\n3、回收的话，优化占用空间多的任务的策略，移除旧策略，添加新策略。\n4、不回收的话，导出这个任务详情（做备份），删除任务；后台清理空间，方法如下:zfs list 查到占用空间最多的任务对应的name，客户确认可删除后，用 zfs destroy -r  查到的name值 删除；如提示有依赖，先删除依赖任务\n5、根据导出的任务详情，重新创建任务，建新的策略",
+    "desc": "故障原因: 任务异常终止，备份数据没有清除，额外占用空间",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] DP2000密码重置",
+    "cmd": "一 若忘记用户密码，可使用 nvicat 工具连接数据库（主机填服务端 IP，端口为 41000，用户名和密码都为 msa），找到 msa 库 userinfo 表中的 username 字段对应的用户名，在 password 字段输入a66abb5684c45962d887564f08346e8d后保存，可将密码重置为 admin123456\n二 若使用命令行去修改密码  参考命令行修改手册  若dp2000版本为20230323等  需要在连接数据库时加上    -h 127.0.0.1",
+    "desc": "故障原因: 忘记密码",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] 代理端报连接错误",
+    "cmd": "systemctl status MSABackupAgent\nsystemctl restart MSABackupAgent",
+    "desc": "故障原因: 代理端服务异常",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[带库] 收集带库和驱动器日志",
+    "cmd": "感谢您选择了IBM的磁带库设备，关于drive故障问题，请按照以下方式收集log进一步分析：\n1）Library中第一个子菜单（dashboard）> Actions > Export Library Logs\n2）drive dump: Drives > Actions->export drive log，下载报错相关驱动器的drive log。\n3)  相关报错截图",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 某节点负载过高",
+    "cmd": "1、检查：df -h  #查看/var/log 是否 有足够空间\n                 free -h  #查看节点内存是否充足\n                 top         #查看那个服务占用资源比较高\n2，如发现smb，ganesha，tgtd  占用资源过高，就重启一下对应服务",
+    "desc": "故障原因: 系统服务内存泄漏",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] core文件一直产生",
+    "cmd": "1.登录到对应节点 执行 file /var/log/core.1046480   如果输出如下 就是icfs-client过多\nELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from 'logrotate /etc/logrotate.d/icfs', real uid: 0, effective uid: 0, real gid: 0, effective gid: 0, execfn: '/sbin/logrotate', platform: 'x86_64'\n2.删除icfs-client文件\nfind /var/log/icfs -mtime +2 -name 'icfs-client.*.log' -exec rm {} \\;",
+    "desc": "故障原因: 其中一种原因是因为系统目录下icfs-client过多",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] sas链路异常",
+    "cmd": "1，执行scrtnycli.x86_64后ctrl +c 退出  确认机器上边的expand（假设为12U的机器 只有1个expand卡） 注：如果是G7机型，用g4Xdiagnostics.x86_64\n2.执行  scrtnycli.x86_64 -i 1 phy -err 确认报错槽位是否与其他的槽位输出的信息不一致\n3.执行  scrtnycli.x86_64 -i 1 cli phyinfo  确认phy是否与其他的不一致 有变化  （SATA列为1才是硬盘）\n4.根据3找到的异常硬盘 找到对应的ATTACHED SAS ADDR值  以查询到的值为（56C92BF0_02D3358C）做案例\n5.通过命令查询所有硬盘的ATTACHENSASADDR值 \n每个硬盘都执行 sg_inq -p OX83 /dev/sda\n批量查询所有硬盘种ATTACHED SAS ADDR\nfor i in /dev/sd[a-z];do echo \"$i\"; sg_inq -p OX83 \"$i\";donelgrep -i -B 30 \"56c92BF002D3358c\"\n6.确认硬盘后换盘处理问题\n",
+    "desc": "故障原因: 其中一种硬盘类的",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[硬件] 更换主板后进不去系统",
+    "cmd": "更换主板后进不去系统：bios设置，sata控制器和ssata 控制器没有设置为raid模式\n\n1，看看bios设置，sata控制器和ssata 控制器有没有设置为raid模式\n2，Bios第三个界面里，Platform那个",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] gpfs客户端ls卡住",
+    "cmd": "1.先停止：/usr/lpp/mmfs/bin/mmshutdown \n2.再启动：/usr/lpp/mmfs/bin/mmstartup",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] cap不释放",
+    "cmd": "使用cap_release_v2.2脚本恢复",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] dp2000连接与磁带库问题",
+    "cmd": "dp2000软件方面是不支持备份转移的，也不支持带库的链接\n\n硬件方面，带库是必须要用到fc协议卡的，不能用以太网协议，dp2000上的硬件方面也是不支持的",
+    "desc": "",
+    "author": "付壮壮"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] dp2000备份任务时提示查看已经存在的mount目录失败",
+    "cmd": "1.cd /opt/BF***/hxc/backup/ ,     vim   Server.xml中  UseCustomShell  0改为1\n2.重启代理服务，./MSABackupAgentService  restart",
+    "desc": "",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] dp2000备份sqlserver时 全量备份可以 增量备份失败",
+    "cmd": "sqlserver限制，简单模式不允许做增量备份  需要让客户DBA更换数据库模式",
+    "desc": "",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 硬盘上电时长超限bmc有告警，机器有红灯",
+    "cmd": "1、关闭磁盘亚健康对应检测项：\nansible all -m shell -a \"sudo sed -i 's/diskuptime = 1//g' /etc/subhealth.ini\"\nansible all -m shell -a \"sudo rm /etc/subhealth.ini.save -f\"\n2、关闭管软上电时长对应告警、清除已发生发告警\n3、以上执行后将不会新增告警和磁盘红灯，但是对于当前已经亮红灯的硬盘，需要通过点亮/取消定位灯来手动消除BMC告警和红灯",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] cifs客户端闪断",
+    "cmd": "客户端闪断，本地组策略优化，运行gpedit.msc ，\n选择【Windows设置】-【安全设置】-【本地策略】-【安全选项】右键点击【属性】调整“暂停会话前所需的空闲时间数量”为99999相当于禁止，默认为15分钟，管理员执行gpupdate/force，强制刷本地组策略，无须重启。",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "CASES",
+    "title": "[带库] 清洗带库",
+    "cmd": "参考文档《磁带清洗判断及操作步骤.docx》",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 换盘（3.7.30.20版本，盘系统下不识别，管软无法退盘）",
+    "cmd": "3.7.30.20，版本盘系统下不识别，管软无法退盘。无法进行正常管软换盘流程。\n（因为此版本不支持不识别盘符的情况下退盘）处理办法：把新盘插上去之后再退盘操作，再执行加载新盘，以完成标准换盘流程。",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] 换盘的时候关闭写缓存失败",
+    "cmd": "先用mmlsconfig命令查询WCE是否开启,如果开启的话直接执行sdparm --set WCE=0 /dev/sXX ",
+    "desc": "",
+    "author": "郭嘉良"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 负载均衡服务异常",
+    "cmd": "管软报节点负载均衡服务异常，systemctl status pdns 状态正常，ps -ef | grep loadbalance 发现无此进程，重启systemctl restart pdns后，ps -ef | grep loadbalance 进程重新加载出现，后此告警消失。",
+    "desc": "故障原因: 判定标准：1.通过“systemctl status pdns”命令查询pdns服务状态，如非running则上报告警。2.若执行ps -ef|grep loadbalance | grep –v | wcl -l >0, 否则上报告警",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 换盘加盘失败",
+    "cmd": "systemctl status udev\nsystemctl restart udev",
+    "desc": "故障原因: 坏盘导致 udev 服务异常",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[硬件] BMC不通，网口物理故障",
+    "cmd": "查看配置清单是否有管理板（IntelG7或者海光四号机型开始有），1.如有：更换管理板。2.如无管理板，则更换主板。\n",
+    "desc": "故障原因: bmc网口或bmc芯片问题",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] 换盘时not-ok出现非故障硬盘的报错 且查找pdisk槽位并未看到有盘符\n如图中的n001p006",
+    "cmd": "需要把故障盘重新插回去，报错就没了",
+    "desc": "故障原因: 故障盘引起的",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[GPFS] 换盘时如果nvme盘为蛟容系列的 格式化盘的时候需要更改为2",
+    "cmd": "格式化盘的命令如图\nnvme format -f -lbaf=2 /dev/nume5n1",
+    "desc": "故障原因: 硬盘类型引起的",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[DP2000] 备份任务时  若遇到虚拟机迁移备份任务失败 迁移回来也不行",
+    "cmd": "需要在旧的任务上边把旧的任务策略移除了 重新创建备份任务   保持一致   \n可以存在两个相同任务 但是只能启用一个任务的备份策略",
+    "desc": "故障原因: 迁移之后在迁移回来 备份id什么的都会变 所以备份任务还是报错 ",
+    "author": "王朝阳"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] SSH不了",
+    "cmd": "systemctl restart dbus\nsystemctl restart systemd-logind",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 使用存储域名时客户端（linux）需要的配置",
+    "cmd": "配置/etc/resolv.conf\n配置到/etc/resolv.conf时候，我们的这个nameserver要写在第一行，要不然有可能域名不通",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[硬件] 板载raid配置方法",
+    "cmd": "intel全闪或60盘位机型多使用板载raid方案（未配置raid卡），raid配置方案参考以下文档：《Intel M7机型板载raid操作说明.docx》",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] 重构卡住，卡%0",
+    "cmd": "管理软件：集群设置-存储服务-数据恢复策略设置，对应存储池设置个固定宽带值，如100MiB。设置完之后观察icfs -s是否恢复",
+    "desc": "故障原因: 小概率bug",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[ICFS] mon db 占用过大  ",
+    "cmd": "\tIcfs –s显示 mon low disk space\n1.针对重构期间的mondb过大，持续关注，重构完成后即可恢复。\n\t2. 对于manifest文件过大导致的low disk space，在各个mon节点执行如下命令查看MANIFEST 占用情况：\nls -lh /var/lib/icfs/mon/icfs-${i}/store.db/|grep MANIFEST\n针对超过5G的节点，建议在故障冗余度内参考如下命令重启mon服务。\nsystemctl restart icfs-mon@{节点hostname/} ",
+    "desc": "",
+    "author": "杨颜宁"
+  },
+  {
+    "cat": "CASES",
+    "title": "[带库] 管理页面密码登录错误过多，账户被锁定",
+    "cmd": "按照图上的流程进行修改，可获得临时密码",
+    "desc": "",
+    "author": "付壮壮"
+  },
+
+  // ================= 政策及产品信息 =================
+  {
+    "cat": "POLICY",
+    "title": "中国移动网络云过保支持",
+    "cmd": "发送【滚动申请】邮件，贾斌审批后，信息客热线派单",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "硬盘报错上电时长超限",
+    "cmd": "非硬盘故障，一般不予更换；强烈要求更换的客户单独讨论",
+    "desc": "话术建议: 1、上电时长超限告警不指示任何可能的硬盘故障，可放心正常使用\n2、后续新版本已删除此类型告警，可提供方法关闭告警",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "关于问题解决微信群解散",
+    "cmd": "问题处理微信群在完成问题处理后，原则上及时解散；发送解散通知后，预留一定时间如果客户不再回应后再解散，建议是当天下班前执行解散",
+    "desc": "话术建议: 本次服务已完成，群将解散，后续有问题可再次联系400-8600011，感谢您的配合，谢谢！",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "产品过保/咨询续保",
+    "cmd": "1、过保产品不予支持（简单的咨询类问题除外）\n2、让客户联系销售续保（一般不主动提及单次维修服务）\n3、若客户没有销售联系方式，由热线向对应区域BPM发送线索邮件，由前端同事去联系客户\n4、400热线不再提供报价\n5、若问题很紧急或客户态度很强硬，引导客户联系销售提供特殊支持或内部上升决策",
+    "desc": "话术建议: 1、经查询您报修的产品已过保，按我们售后政策不能给您提供支持了；\n2、建议您联系我们的销售同事进行续保，续保通过后我们正常提供售后服务；\n3、（针对客户不知道如何联系销售的情况）那我们这边反馈一下，让当地的销售同事联系您；\n4、（针对问题很紧急或客户态度很强硬的情况）那您这边可以联系下销售同事，看他那边是否能协调提供一些帮助->我们这边上升一下，稍后给您回电。\n",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "产品维保信息查询",
+    "cmd": "https://support.ieisystem.com/eportal/ui?pageId=2317460&type=4\nhttps://www.inspur.com/eportal/ui?pageId=2317460\n如果iei和inspur官网上注册的维保信息不一致，以inspur官网上为准",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "GPFS版本升级",
+    "cmd": "5.1.xx版本需要升级到5.2.xx",
+    "desc": "话术建议: 1、目前这个版本（5.1.xx）已经EOS了，新版本修复了已知的bug，这个版本如果后面出了比较严重的bug，会没有技术支持，建议协调一个窗口升级一下\n2、离线升级，升级需要停机大概三个小时左右",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "续保软件",
+    "cmd": "1.BeeGFS目前不能续保了 后续不维护\n2.dp1000是信息的人负载维护，不续保，也不让升dp2000\n3.dp2000可以续保但是新实施的dp2000目前厂商不给授权，所以实施不了",
+    "desc": "",
+    "author": "未知"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[硬件] 所有机型的bmc&bios版本",
+    "cmd": "百度网盘：链接: https://pan.baidu.com/s/1Dej6tlCEB670f_5Zr1alRw 提取码: aiqx\n微盘：协作网盘——LMT硬件资料——AS13000历史固件归档",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[ICFS] 默认密码",
+    "cmd": "OS：root/000000（老机型）、root/inspuR@123 (旧机型)，icfs/inspuR@123（新机型）\n管理软件：superuser/inspuR@468",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[GPFS] 默认密码",
+    "cmd": "OS：root/inspuR@123\nGUI：admin/inspuR@123",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[DP2000] 默认密码",
+    "cmd": "OS：root/inspur123@A     管理软件：dev_admin/admin123456",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[ALL] 各产品版本镜像",
+    "cmd": "百度网盘链接: https://pan.baidu.com/s/5jrWVhCy3V1m9h1qMbRUKpg  ",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[ICFS] 授权和license",
+    "cmd": "填写申请表向冯立晓（fenglixiao@inspur.com）和客服公邮（ds066@inspur.com）发邮件申请。《AS13000分布式存储集群授权码及License申请.xls》《xx客户xx型号设备项目授权码申请表.xls》",
+    "desc": "",
+    "author": "冯立晓"
+  },
+  {
+    "cat": "POLICY",
+    "title": "[带库] IBM报修",
+    "cmd": "8008101818",
+    "desc": "",
+    "author": "冯立晓"
+  }
+])
 
         // 3. 【自动数据处理器】清洗 JSON 并合并到数据库
         rawIcfsJson.forEach(item => {
