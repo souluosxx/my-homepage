@@ -49,13 +49,6 @@
             border-color: rgba(0, 242, 254, 0.3);
             box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
         }
-        
-        .motto {
-            flex: 1; 
-            max-width: 100%; 
-            font-size: 15px; color: rgba(255, 255, 255, 0.6); 
-            margin-bottom: 30px; line-height: 1.5; font-style: italic; 
-        }
 
         .card::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
@@ -102,10 +95,10 @@
         }
 
         /* ==================================================
-           4. 音乐播放器 (终极完美布局)
+           4. 音乐播放器 (居中与紧凑布局)
         ================================================== */
         #music-player {
-            position: fixed; bottom: 20px; right: 20px; width: 360px; /* 稍微加宽，让空间更充裕 */
+            position: fixed; bottom: 20px; right: 20px; width: 360px;
             background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 15px;
             padding: 18px; z-index: 100;
@@ -119,7 +112,7 @@
             box-shadow: 0 10px 40px rgba(0, 242, 254, 0.2);
         }
 
-        /* 顶部可点击歌单容器 */
+        /* 歌单容器 */
         .playlist-container {
             max-height: 0;
             overflow-y: auto;
@@ -145,47 +138,48 @@
         .playlist-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .playlist-item.active { color: var(--color-primary); font-weight: bold; }
 
-        /* ✨ 核心排版修复：上下分层排版 */
+        /* ✨ 修复：文字绝对居中 */
         .song-info { 
             display: flex; 
-            flex-direction: column; /* 改为纵向排列 */
-            align-items: flex-start; /* 左对齐 */
-            margin-bottom: 15px; 
-            gap: 12px; /* 歌名和按钮之间的间距 */
+            flex-direction: column; 
+            align-items: center; /* 整体居中 */
+            margin-bottom: 12px; 
+            gap: 10px; 
         }
         
         .song-name-text { 
             font-weight: bold; 
-            font-size: 15px; /* 歌名稍微放大 */
+            font-size: 15px; 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
-            width: 100%; /* 独占一整行 */
+            width: 100%; 
+            text-align: center; /* 文字内部居中 */
             color: var(--color-primary);
         }
         
-        /* ✨ 按钮排版：等距平铺 */
+        /* ✨ 修复：按钮变小并聚拢 */
         .controls-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center; /* 按钮向中间聚拢 */
             width: 100%;
-            gap: 8px; /* 按钮之间的缝隙 */
+            gap: 10px; /* 按钮间距 */
         }
 
         .ctrl-btn { 
-            flex: 1; /* 每个按钮平分宽度 */
-            justify-content: center; /* 按钮内容居中 */
+            /* 删除了 flex: 1，让按钮不再强制拉伸 */
+            justify-content: center; 
             background: rgba(255, 255, 255, 0.05); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             border-radius: 8px;
             color: #fff; cursor: pointer; 
-            padding: 8px 0; 
+            padding: 5px 12px; /* 缩小了上下高度，增加了左右内边距，使其更精致 */
             display: flex; align-items: center; gap: 4px;
             transition: 0.3s; outline: none;
         }
-        .ctrl-btn .icon { font-size: 14px; }
-        .ctrl-btn .label { font-size: 12px; color: rgba(255,255,255,0.8); white-space: nowrap;}
+        .ctrl-btn .icon { font-size: 13px; }
+        .ctrl-btn .label { font-size: 11px; color: rgba(255,255,255,0.8); white-space: nowrap;}
         
         .ctrl-btn:hover { 
             background: rgba(0, 242, 254, 0.15); 
@@ -229,7 +223,7 @@
         <h1 class="name">颜空间</h1>
         <h3 style="margin-bottom: 15px; font-size: 14px; color: var(--color-primary); letter-spacing: 2px;">✨ 点击跳转 ✨</h3>
         <div class="link-group">
-            <a href="know.html" target="_blank" class="link-btn">🌌 知识库</a>
+            <a href="knowledge.html" target="_blank" class="link-btn">🌌 知识库</a>
             <a href="linux.html" target="_blank" class="link-btn">🌌 命令库</a>
         </div>
     </div>
@@ -360,13 +354,12 @@
     </script>
 
     <script>
-        // 💡 修复：已经补全了漏掉的英文逗号
         const playlist = [
-            { name: "恋人 - 李荣浩", src: "恋人 - 李荣浩.mp3", lrc: "恋人 - 李荣浩.lrc" },
-            { name: "还是会想你 - 林达浪、h3R3", src: "还是会想你 - 林达浪、h3R3.mp3", lrc: "还是会想你 - 林达浪、h3R3.lrc" },
-            { name: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪", src: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
-            { name: "如果呢 - 郑润泽", src: "如果呢 - 郑润泽.mp3", lrc: "如果呢 - 郑润泽.lrc" },
-            { name: "忘不掉的你 - h3R3", src: "忘不掉的你 - h3R3.mp3", lrc: "忘不掉的你 - h3R3.lrc" },
+            { name: "恋人 - 李荣浩", src: "/music/恋人 - 李荣浩.mp3", lrc: "/music/恋人 - 李荣浩.lrc" },
+            { name: "还是会想你 - 林达浪、h3R3", src: "/music/还是会想你 - 林达浪、h3R3.mp3", lrc: "/music/还是会想你 - 林达浪、h3R3.lrc" },
+            { name: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪", src: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
+            { name: "如果呢 - 郑润泽", src: "/music/如果呢 - 郑润泽.mp3", lrc: "/music/如果呢 - 郑润泽.lrc" },
+            { name: "忘不掉的你 - h3R3", src: "/music/忘不掉的你 - h3R3.mp3", lrc: "/music/忘不掉的你 - h3R3.lrc" },
             { name: "想你和我们的以后 - 苏运莹", src: "/music/想你和我们的以后 - 苏运莹.flac", lrc: "/music/想你和我们的以后 - 苏运莹.lrc" },
             { name: "不被祝福的幸福 - 杨丞琳", src: "/music/不被祝福的幸福 - 杨丞琳.mp3", lrc: "/music/不被祝福的幸福 - 杨丞琳.lrc" },
             { name: "嗜好 - 颜人中", src: "/music/嗜好 - 颜人中.mp3", lrc: "/music/嗜好 - 颜人中.lrc" },
