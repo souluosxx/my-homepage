@@ -104,36 +104,56 @@
         /* ==================================================
            4. 音乐播放器与交互增强
         ================================================== */
-        #music-player {
-            position: fixed; bottom: 20px; right: 20px; width: 320px;
-            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 15px;
-            padding: 15px; z-index: 100;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; flex-direction: column;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-        }
-        #music-player.expanded {
-            width: 380px; height: 480px;
-            border-color: rgba(0, 242, 254, 0.5);
-            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.2);
-        }
-
-        /* ✨ 新增：顶部可点击歌单容器 */
+/* 歌单容器：改为动态高度，展示全部歌曲 */
         .playlist-container {
             max-height: 0;
             overflow-y: auto;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-bottom: 0px solid rgba(255,255,255,0.1);
             opacity: 0;
         }
         .playlist-container.show {
-            max-height: 120px; /* 歌单最大高度 */
+            max-height: 400px; /* 增加最大高度，完美展示十几首歌 */
             margin-bottom: 10px;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             opacity: 1;
         }
+        /* 歌单滚动条美化 */
+        .playlist-container::-webkit-scrollbar { width: 4px; }
+        .playlist-container::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 2px; }
+
+        .playlist-item {
+            font-size: 13px; color: rgba(255,255,255,0.6); padding: 8px 5px;
+            cursor: pointer; border-radius: 4px; transition: 0.2s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .playlist-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .playlist-item.active { color: var(--color-primary); font-weight: bold; }
+
+        .song-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px;}
+        .song-name-text { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; max-width: 100%; display: block; padding-right: 10px; }
+        
+        /* ✨ 新增：带文字标识的微边框控制按钮 */
+        .ctrl-btn { 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 6px;
+            color: #fff; cursor: pointer; 
+            margin-left: 6px; padding: 4px 8px; 
+            display: flex; align-items: center; gap: 4px; /* 图标和文字的间隙 */
+            transition: 0.3s; outline: none;
+        }
+        .ctrl-btn .icon { font-size: 14px; }
+        .ctrl-btn .label { font-size: 11px; color: rgba(255,255,255,0.8); white-space: nowrap;}
+        
+        .ctrl-btn:hover { 
+            background: rgba(0, 242, 254, 0.15); 
+            border-color: var(--color-primary); 
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+            transform: translateY(-2px); /* 悬浮时微动 */
+        }
+        .ctrl-btn:hover .label { color: #fff; }
         /* 歌单滚动条美化 */
         .playlist-container::-webkit-scrollbar { width: 4px; }
         .playlist-container::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 2px; }
