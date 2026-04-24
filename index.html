@@ -49,6 +49,13 @@
             border-color: rgba(0, 242, 254, 0.3);
             box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
         }
+        
+        .motto {
+            flex: 1; 
+            max-width: 100%; 
+            font-size: 15px; color: rgba(255, 255, 255, 0.6); 
+            margin-bottom: 30px; line-height: 1.5; font-style: italic; 
+        }
 
         .card::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
@@ -95,25 +102,24 @@
         }
 
         /* ==================================================
-           4. 音乐播放器与交互增强
+           4. 音乐播放器 (终极完美布局)
         ================================================== */
-        /* 核心：就是这一段丢失导致了播放器跑到了中间 */
         #music-player {
-            position: fixed; bottom: 20px; right: 20px; width: 340px;
+            position: fixed; bottom: 20px; right: 20px; width: 360px; /* 稍微加宽，让空间更充裕 */
             background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 15px;
-            padding: 15px; z-index: 100;
+            padding: 18px; z-index: 100;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; flex-direction: column;
             box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
         #music-player.expanded {
-            width: 380px; height: 480px;
+            width: 400px; height: 500px;
             border-color: rgba(0, 242, 254, 0.5);
             box-shadow: 0 10px 40px rgba(0, 242, 254, 0.2);
         }
 
-        /* 歌单容器：动态高度，展示全部歌曲 */
+        /* 顶部可点击歌单容器 */
         .playlist-container {
             max-height: 0;
             overflow-y: auto;
@@ -122,13 +128,12 @@
             opacity: 0;
         }
         .playlist-container.show {
-            max-height: 400px; 
-            margin-bottom: 10px;
+            max-height: 250px; 
+            margin-bottom: 12px;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             opacity: 1;
         }
-        /* 歌单滚动条美化 */
         .playlist-container::-webkit-scrollbar { width: 4px; }
         .playlist-container::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 2px; }
 
@@ -140,21 +145,47 @@
         .playlist-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .playlist-item.active { color: var(--color-primary); font-weight: bold; }
 
-        .song-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px;}
-        .song-name-text { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; max-width: 100%; display: block; padding-right: 10px; }
+        /* ✨ 核心排版修复：上下分层排版 */
+        .song-info { 
+            display: flex; 
+            flex-direction: column; /* 改为纵向排列 */
+            align-items: flex-start; /* 左对齐 */
+            margin-bottom: 15px; 
+            gap: 12px; /* 歌名和按钮之间的间距 */
+        }
         
-        /* 带文字标识的微边框控制按钮 */
+        .song-name-text { 
+            font-weight: bold; 
+            font-size: 15px; /* 歌名稍微放大 */
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            width: 100%; /* 独占一整行 */
+            color: var(--color-primary);
+        }
+        
+        /* ✨ 按钮排版：等距平铺 */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px; /* 按钮之间的缝隙 */
+        }
+
         .ctrl-btn { 
+            flex: 1; /* 每个按钮平分宽度 */
+            justify-content: center; /* 按钮内容居中 */
             background: rgba(255, 255, 255, 0.05); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 6px;
+            border-radius: 8px;
             color: #fff; cursor: pointer; 
-            margin-left: 6px; padding: 4px 8px; 
+            padding: 8px 0; 
             display: flex; align-items: center; gap: 4px;
             transition: 0.3s; outline: none;
         }
         .ctrl-btn .icon { font-size: 14px; }
-        .ctrl-btn .label { font-size: 11px; color: rgba(255,255,255,0.8); white-space: nowrap;}
+        .ctrl-btn .label { font-size: 12px; color: rgba(255,255,255,0.8); white-space: nowrap;}
         
         .ctrl-btn:hover { 
             background: rgba(0, 242, 254, 0.15); 
@@ -198,17 +229,20 @@
         <h1 class="name">颜空间</h1>
         <h3 style="margin-bottom: 15px; font-size: 14px; color: var(--color-primary); letter-spacing: 2px;">✨ 点击跳转 ✨</h3>
         <div class="link-group">
-            <a href="knowledge.html" target="_blank" class="link-btn">🌌 知识库</a>
+            <a href="know.html" target="_blank" class="link-btn">🌌 知识库</a>
             <a href="linux.html" target="_blank" class="link-btn">🌌 命令库</a>
         </div>
     </div>
 
     <div id="music-player">
         <div id="playlist-container" class="playlist-container"></div>
+
         <audio id="main-audio"></audio>
+        
         <div class="song-info">
-            <span id="song-name" class="song-name-text" style="color:var(--color-primary)">正在加载...</span>
-            <div style="display: flex; align-items: center;">
+            <div id="song-name" class="song-name-text">正在加载...</div>
+            
+            <div class="controls-row">
                 <button class="ctrl-btn" onclick="togglePlaylist()" title="展开/收起歌单">
                     <span class="icon">📜</span><span class="label">歌单</span>
                 </button>
@@ -223,6 +257,7 @@
                 </button>
             </div>
         </div>
+
         <div class="progress-container" id="progress-container" onclick="seekAudio(event)">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
@@ -325,19 +360,20 @@
     </script>
 
     <script>
+        // 💡 修复：已经补全了漏掉的英文逗号
         const playlist = [
-            { name: "恋人 - 李荣浩", src: "/music/恋人 - 李荣浩.mp3", lrc: "/music/恋人 - 李荣浩.lrc" },
-            { name: "还是会想你 - 林达浪、h3R3", src: "/music/还是会想你 - 林达浪、h3R3.mp3", lrc: "/music/还是会想你 - 林达浪、h3R3.lrc" },
-            { name: "罗生门（Follow） - 梨冻紧", src: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
-            { name: "如果呢 - 郑润泽", src: "/music/如果呢 - 郑润泽.mp3", lrc: "/music/如果呢 - 郑润泽.lrc" },
-            { name: "忘不掉的你 - h3R3", src: "/music/忘不掉的你 - h3R3.mp3", lrc: "/music/忘不掉的你 - h3R3.lrc" },
+            { name: "恋人 - 李荣浩", src: "恋人 - 李荣浩.mp3", lrc: "恋人 - 李荣浩.lrc" },
+            { name: "还是会想你 - 林达浪、h3R3", src: "还是会想你 - 林达浪、h3R3.mp3", lrc: "还是会想你 - 林达浪、h3R3.lrc" },
+            { name: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪", src: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
+            { name: "如果呢 - 郑润泽", src: "如果呢 - 郑润泽.mp3", lrc: "如果呢 - 郑润泽.lrc" },
+            { name: "忘不掉的你 - h3R3", src: "忘不掉的你 - h3R3.mp3", lrc: "忘不掉的你 - h3R3.lrc" },
             { name: "想你和我们的以后 - 苏运莹", src: "/music/想你和我们的以后 - 苏运莹.flac", lrc: "/music/想你和我们的以后 - 苏运莹.lrc" },
             { name: "不被祝福的幸福 - 杨丞琳", src: "/music/不被祝福的幸福 - 杨丞琳.mp3", lrc: "/music/不被祝福的幸福 - 杨丞琳.lrc" },
             { name: "嗜好 - 颜人中", src: "/music/嗜好 - 颜人中.mp3", lrc: "/music/嗜好 - 颜人中.lrc" },
             { name: "特别的人 - 方大同", src: "/music/特别的人 - 方大同.mp3", lrc: "/music/特别的人 - 方大同.lrc" },
+            { name: "想你和我们的以后 - 苏运莹", src: "/music/想你和我们的以后 - 苏运莹.mp3", lrc: "/music/想你和我们的以后 - 苏运莹.lrc" },
             { name: "于是 - 郑润泽", src: "/music/于是 - 郑润泽.mp3", lrc: "/music/于是 - 郑润泽.lrc" }
         ];
-        
         let songIndex = 0;
         let lrcData = [];
         let isExpanded = false;
