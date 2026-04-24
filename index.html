@@ -49,13 +49,6 @@
             border-color: rgba(0, 242, 254, 0.3);
             box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
         }
-        
-        .motto {
-            flex: 1; 
-            max-width: 100%; 
-            font-size: 15px; color: rgba(255, 255, 255, 0.6); 
-            margin-bottom: 30px; line-height: 1.5; font-style: italic; 
-        }
 
         .card::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
@@ -104,7 +97,23 @@
         /* ==================================================
            4. 音乐播放器与交互增强
         ================================================== */
-/* 歌单容器：改为动态高度，展示全部歌曲 */
+        /* 核心：就是这一段丢失导致了播放器跑到了中间 */
+        #music-player {
+            position: fixed; bottom: 20px; right: 20px; width: 340px;
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 15px;
+            padding: 15px; z-index: 100;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        }
+        #music-player.expanded {
+            width: 380px; height: 480px;
+            border-color: rgba(0, 242, 254, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.2);
+        }
+
+        /* 歌单容器：动态高度，展示全部歌曲 */
         .playlist-container {
             max-height: 0;
             overflow-y: auto;
@@ -113,7 +122,7 @@
             opacity: 0;
         }
         .playlist-container.show {
-            max-height: 400px; /* 增加最大高度，完美展示十几首歌 */
+            max-height: 400px; 
             margin-bottom: 10px;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -134,14 +143,14 @@
         .song-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px;}
         .song-name-text { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; max-width: 100%; display: block; padding-right: 10px; }
         
-        /* ✨ 新增：带文字标识的微边框控制按钮 */
+        /* 带文字标识的微边框控制按钮 */
         .ctrl-btn { 
             background: rgba(255, 255, 255, 0.05); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             border-radius: 6px;
             color: #fff; cursor: pointer; 
             margin-left: 6px; padding: 4px 8px; 
-            display: flex; align-items: center; gap: 4px; /* 图标和文字的间隙 */
+            display: flex; align-items: center; gap: 4px;
             transition: 0.3s; outline: none;
         }
         .ctrl-btn .icon { font-size: 14px; }
@@ -151,26 +160,9 @@
             background: rgba(0, 242, 254, 0.15); 
             border-color: var(--color-primary); 
             box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
-            transform: translateY(-2px); /* 悬浮时微动 */
+            transform: translateY(-2px); 
         }
         .ctrl-btn:hover .label { color: #fff; }
-        /* 歌单滚动条美化 */
-        .playlist-container::-webkit-scrollbar { width: 4px; }
-        .playlist-container::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 2px; }
-
-        .playlist-item {
-            font-size: 13px; color: rgba(255,255,255,0.6); padding: 8px 5px;
-            cursor: pointer; border-radius: 4px; transition: 0.2s;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .playlist-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .playlist-item.active { color: var(--color-primary); font-weight: bold; }
-
-        .song-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px;}
-        .song-name-text { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-        
-        .ctrl-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; margin-left: 8px; transition: 0.2s; outline: none;}
-        .ctrl-btn:hover { color: var(--color-primary); text-shadow: 0 0 10px var(--color-primary); transform: scale(1.1);}
 
         /* 进度条 */
         .progress-container {
@@ -206,22 +198,29 @@
         <h1 class="name">颜空间</h1>
         <h3 style="margin-bottom: 15px; font-size: 14px; color: var(--color-primary); letter-spacing: 2px;">✨ 点击跳转 ✨</h3>
         <div class="link-group">
-            <a href="know.html" target="_blank" class="link-btn">🌌 知识库</a>
+            <a href="knowledge.html" target="_blank" class="link-btn">🌌 知识库</a>
             <a href="linux.html" target="_blank" class="link-btn">🌌 命令库</a>
         </div>
     </div>
 
     <div id="music-player">
         <div id="playlist-container" class="playlist-container"></div>
-
         <audio id="main-audio"></audio>
         <div class="song-info">
             <span id="song-name" class="song-name-text" style="color:var(--color-primary)">正在加载...</span>
             <div style="display: flex; align-items: center;">
-                <button class="ctrl-btn" onclick="togglePlaylist()" title="展开/收起歌单">📜</button>
-                <button class="ctrl-btn" onclick="toggleExpand()" id="expand-icon" title="展开/收起歌词">🔼</button>
-                <button class="ctrl-btn" onclick="togglePlay()" id="play-icon" title="播放/暂停">▶️</button>
-                <button class="ctrl-btn" onclick="nextSong()" title="下一首">⏭️</button>
+                <button class="ctrl-btn" onclick="togglePlaylist()" title="展开/收起歌单">
+                    <span class="icon">📜</span><span class="label">歌单</span>
+                </button>
+                <button class="ctrl-btn" id="expand-btn" onclick="toggleExpand()" title="展开/收起歌词">
+                    <span class="icon" id="expand-icon">🔼</span><span class="label" id="expand-label">歌词</span>
+                </button>
+                <button class="ctrl-btn" id="play-btn" onclick="togglePlay()" title="播放/暂停">
+                    <span class="icon" id="play-icon">▶️</span><span class="label" id="play-label">播放</span>
+                </button>
+                <button class="ctrl-btn" onclick="nextSong()" title="下一首">
+                    <span class="icon">⏭️</span><span class="label">切歌</span>
+                </button>
             </div>
         </div>
         <div class="progress-container" id="progress-container" onclick="seekAudio(event)">
@@ -273,7 +272,7 @@
             starPos[i*3] = (Math.random() - 0.5) * 2000;     
             starPos[i*3+1] = (Math.random() - 0.5) * 2000;   
             starPos[i*3+2] = (Math.random() - 0.5) * 2000;   
-            starVelocity.push(Math.random() * 2 + 1);       
+            starVelocity.push(Math.random() * 2 + 1);        
         }
         starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
         
@@ -326,19 +325,19 @@
     </script>
 
     <script>
-       const playlist = [
-            { name: "特别的人 - 方大同", src: "/music/特别的人 - 方大同.mp3", lrc: "/music/特别的人 - 方大同.lrc" },
-            { name: "恋人 - 李荣浩", src: "恋人 - 李荣浩.mp3", lrc: "恋人 - 李荣浩.lrc" },
-            { name: "还是会想你 - 林达浪、h3R3", src: "还是会想你 - 林达浪、h3R3.mp3", lrc: "还是会想你 - 林达浪、h3R3.lrc" },
-            { name: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪", src: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
-            { name: "如果呢 - 郑润泽", src: "如果呢 - 郑润泽.mp3", lrc: "如果呢 - 郑润泽.lrc" },
-            { name: "忘不掉的你 - h3R3", src: "忘不掉的你 - h3R3.mp3", lrc: "忘不掉的你 - h3R3.lrc" },
+        const playlist = [
+            { name: "恋人 - 李荣浩", src: "/music/恋人 - 李荣浩.mp3", lrc: "/music/恋人 - 李荣浩.lrc" },
+            { name: "还是会想你 - 林达浪、h3R3", src: "/music/还是会想你 - 林达浪、h3R3.mp3", lrc: "/music/还是会想你 - 林达浪、h3R3.lrc" },
+            { name: "罗生门（Follow） - 梨冻紧", src: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.mp3", lrc: "/music/罗生门（Follow） - 梨冻紧、Wiz_H张子豪.lrc" },
+            { name: "如果呢 - 郑润泽", src: "/music/如果呢 - 郑润泽.mp3", lrc: "/music/如果呢 - 郑润泽.lrc" },
+            { name: "忘不掉的你 - h3R3", src: "/music/忘不掉的你 - h3R3.mp3", lrc: "/music/忘不掉的你 - h3R3.lrc" },
             { name: "想你和我们的以后 - 苏运莹", src: "/music/想你和我们的以后 - 苏运莹.flac", lrc: "/music/想你和我们的以后 - 苏运莹.lrc" },
             { name: "不被祝福的幸福 - 杨丞琳", src: "/music/不被祝福的幸福 - 杨丞琳.mp3", lrc: "/music/不被祝福的幸福 - 杨丞琳.lrc" },
             { name: "嗜好 - 颜人中", src: "/music/嗜好 - 颜人中.mp3", lrc: "/music/嗜好 - 颜人中.lrc" },
-            { name: "想你和我们的以后 - 苏运莹", src: "/music/想你和我们的以后 - 苏运莹.mp3", lrc: "/music/想你和我们的以后 - 苏运莹.lrc" },
+            { name: "特别的人 - 方大同", src: "/music/特别的人 - 方大同.mp3", lrc: "/music/特别的人 - 方大同.lrc" },
             { name: "于是 - 郑润泽", src: "/music/于是 - 郑润泽.mp3", lrc: "/music/于是 - 郑润泽.lrc" }
         ];
+        
         let songIndex = 0;
         let lrcData = [];
         let isExpanded = false;
@@ -347,13 +346,11 @@
         const lrcContainer = document.getElementById('lrc-container');
         const lrcList = document.getElementById('lrc-list');
         const playerBox = document.getElementById('music-player');
-        const expandIcon = document.getElementById('expand-icon');
         
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
         
-        // 渲染歌单 DOM
         function renderPlaylistUI() {
             const container = document.getElementById('playlist-container');
             container.innerHTML = playlist.map((song, i) => 
@@ -361,18 +358,17 @@
             ).join('');
         }
 
-        // 显示/隐藏歌单面板
         function togglePlaylist() {
             const container = document.getElementById('playlist-container');
             container.classList.toggle('show');
         }
 
-        // 播放指定歌曲
         function playSpecificSong(idx) {
             songIndex = idx;
             loadSong(songIndex);
             audio.play();
             document.getElementById('play-icon').innerText = '⏸️';
+            document.getElementById('play-label').innerText = '暂停';
         }
 
         async function loadSong(idx) {
@@ -383,7 +379,6 @@
             timeCurrent.innerText = "00:00";
             timeTotal.innerText = "00:00";
             
-            // 更新歌单当前选中项样式
             document.querySelectorAll('.playlist-item').forEach((el, i) => {
                 el.classList.toggle('active', i === idx);
             });
@@ -470,12 +465,12 @@
             isExpanded = !isExpanded;
             if (isExpanded) {
                 playerBox.classList.add('expanded');
-                expandIcon.innerText = '🔽';
-                expandIcon.title = "收起歌词";
+                document.getElementById('expand-icon').innerText = '🔽';
+                document.getElementById('expand-label').innerText = '收起';
             } else {
                 playerBox.classList.remove('expanded');
-                expandIcon.innerText = '🔼';
-                expandIcon.title = "展开歌词";
+                document.getElementById('expand-icon').innerText = '🔼';
+                document.getElementById('expand-label').innerText = '歌词';
             }
             setTimeout(scrollToActiveLine, 400); 
         }
@@ -484,9 +479,11 @@
             if (audio.paused) { 
                 audio.play(); 
                 document.getElementById('play-icon').innerText = '⏸️'; 
+                document.getElementById('play-label').innerText = '暂停';
             } else { 
                 audio.pause(); 
                 document.getElementById('play-icon').innerText = '▶️'; 
+                document.getElementById('play-label').innerText = '播放';
             }
         }
 
@@ -495,6 +492,7 @@
             loadSong(songIndex);
             audio.play();
             document.getElementById('play-icon').innerText = '⏸️';
+            document.getElementById('play-label').innerText = '暂停';
         }
 
         audio.addEventListener("ended", nextSong);
